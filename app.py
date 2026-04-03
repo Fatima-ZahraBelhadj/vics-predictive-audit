@@ -426,21 +426,34 @@ class BelhadjPIDController:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def plotly_layout_base(**overrides) -> dict:
+    xaxis_base = dict(
+        gridcolor="#0a2a35",
+        zerolinecolor="#0a2a35",
+        tickfont=dict(size=10),
+    )
+    yaxis_base = dict(
+        gridcolor="#0a2a35",
+        zerolinecolor="#0a2a35",
+        tickfont=dict(size=10),
+    )
+    # Merge axis title shorthands into nested dicts
+    if "xaxis_title" in overrides:
+        xaxis_base["title"] = overrides.pop("xaxis_title")
+    if "yaxis_title" in overrides:
+        yaxis_base["title"] = overrides.pop("yaxis_title")
+    # Merge any explicit xaxis/yaxis overrides
+    if "xaxis" in overrides:
+        xaxis_base.update(overrides.pop("xaxis"))
+    if "yaxis" in overrides:
+        yaxis_base.update(overrides.pop("yaxis"))
+
     base = dict(
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,5,10,0.6)",
         font=dict(family="JetBrains Mono, monospace", color="#8cc8d8", size=11),
         margin=dict(l=50, r=30, t=50, b=40),
-        xaxis=dict(
-            gridcolor="#0a2a35",
-            zerolinecolor="#0a2a35",
-            tickfont=dict(size=10),
-        ),
-        yaxis=dict(
-            gridcolor="#0a2a35",
-            zerolinecolor="#0a2a35",
-            tickfont=dict(size=10),
-        ),
+        xaxis=xaxis_base,
+        yaxis=yaxis_base,
     )
     base.update(overrides)
     return base
