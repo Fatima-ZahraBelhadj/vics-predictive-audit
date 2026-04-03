@@ -1,841 +1,850 @@
 import streamlit as st
-import pandas as pd
-import numpy as np
 import streamlit.components.v1 as components
-import random
-import time
 
-st.set_page_config(
-    page_title="VICS // BELHADJ AUDIT",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+st.set_page_config(page_title="Neural Command Interface // BELHADJ", layout="wide", initial_sidebar_state="collapsed")
 
-# ─────────────────────────────────────────────
-#  GLOBAL CSS INJECTION — YEAR 2080 GLASSMORPHISM
-# ─────────────────────────────────────────────
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@300;400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap');
 
-/* ── PURGE DEFAULT STREAMLIT CHROME ── */
-#MainMenu, footer, header, .stDeployButton,
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body, [data-testid="stAppViewContainer"], [data-testid="stApp"] {
+    background: #000008 !important;
+    overflow: hidden !important;
+    height: 100vh !important;
+    width: 100vw !important;
+}
+
+#MainMenu, header[data-testid="stHeader"], footer,
 [data-testid="stToolbar"], [data-testid="stDecoration"],
-[data-testid="stStatusWidget"] { display: none !important; }
+[data-testid="stStatusWidget"], .stDeployButton,
+[data-testid="collapsedControl"] { display: none !important; visibility: hidden !important; }
 
-/* ── ROOT VOID ── */
-html, body, [data-testid="stAppViewContainer"],
-[data-testid="stApp"], .main {
-    background: #050505 !important;
-    color: #c8d6e5 !important;
-    font-family: 'Rajdhani', sans-serif !important;
-}
+[data-testid="stAppViewContainer"] > div:first-child { padding: 0 !important; }
+[data-testid="block-container"] { padding: 0 !important; max-width: 100vw !important; }
+section[data-testid="stSidebar"] { display: none !important; }
 
-/* ── SCROLLBAR ── */
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: #050505; }
-::-webkit-scrollbar-thumb { background: #00f3ff44; border-radius: 2px; }
-
-/* ── SIDEBAR ── */
-[data-testid="stSidebar"] {
-    background: linear-gradient(180deg, #07090f 0%, #0a0e1a 60%, #050505 100%) !important;
-    border-right: 1px solid #00f3ff22 !important;
-    box-shadow: 4px 0 40px #00f3ff0a !important;
-}
-[data-testid="stSidebar"] * { font-family: 'Share Tech Mono', monospace !important; }
-[data-testid="stSidebarContent"] { padding: 1rem 1.2rem !important; }
-
-/* ── MAIN CONTENT PADDING ── */
-[data-testid="stMainBlockContainer"] { padding: 1.5rem 2.5rem !important; }
-
-/* ── METRICS ── */
-[data-testid="metric-container"] {
-    background: rgba(0, 243, 255, 0.03) !important;
-    border: 1px solid #00f3ff18 !important;
-    border-radius: 2px !important;
-    padding: 1.2rem 1.5rem !important;
-    backdrop-filter: blur(8px) !important;
-}
-[data-testid="stMetricLabel"] {
-    font-family: 'Share Tech Mono', monospace !important;
-    font-size: 0.65rem !important;
-    letter-spacing: 0.18em !important;
-    color: #00f3ff99 !important;
-    text-transform: uppercase !important;
-}
-[data-testid="stMetricValue"] {
-    font-family: 'Orbitron', sans-serif !important;
-    font-size: 1.8rem !important;
-    font-weight: 700 !important;
-}
-
-/* ── TOGGLE ── */
-[data-testid="stToggle"] label {
-    font-family: 'Orbitron', sans-serif !important;
-    font-size: 0.85rem !important;
-    letter-spacing: 0.12em !important;
-    color: #00f3ffcc !important;
-}
-[data-testid="stToggle"] span[data-checked="true"] {
-    background-color: #00f3ff !important;
-    box-shadow: 0 0 18px #00f3ff88 !important;
-}
-[data-testid="stToggle"] span[data-checked="false"] {
-    background-color: #ff003c !important;
-    box-shadow: 0 0 18px #ff003c88 !important;
-}
-
-/* ── HORIZONTAL RULES ── */
-hr { border-color: #00f3ff15 !important; margin: 0.8rem 0 !important; }
-
-/* ── DIVIDER CLASS ── */
-.vics-divider {
-    height: 1px;
-    background: linear-gradient(90deg, transparent, #00f3ff44, transparent);
-    margin: 0.6rem 0;
-}
-
-/* ── SCANLINE OVERLAY ── */
-[data-testid="stApp"]::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    background: repeating-linear-gradient(
-        0deg,
-        transparent,
-        transparent 2px,
-        rgba(0,243,255,0.012) 2px,
-        rgba(0,243,255,0.012) 4px
-    );
-    pointer-events: none;
-    z-index: 9999;
-}
-
-/* ── CORNER DECORATION ── */
-[data-testid="stApp"]::after {
-    content: "";
-    position: fixed;
-    top: 0; left: 0;
-    width: 200px; height: 200px;
-    background: radial-gradient(circle at top left, #00f3ff08 0%, transparent 70%);
-    pointer-events: none;
-    z-index: 9998;
-}
-
-/* ── COLUMNS GAP ── */
-[data-testid="stHorizontalBlock"] { gap: 1.5rem !important; }
+.element-container, .stMarkdown { margin: 0 !important; padding: 0 !important; }
+iframe { display: block; border: none; }
 </style>
 """, unsafe_allow_html=True)
 
-
-# ─────────────────────────────────────────────
-#  SIDEBAR — APPLICANT PROFILE
-# ─────────────────────────────────────────────
-with st.sidebar:
-    st.markdown("""
-    <div style="
-        font-family:'Share Tech Mono',monospace;
-        color:#00f3ff;
-        font-size:0.68rem;
-        letter-spacing:0.22em;
-        text-align:center;
-        padding:0.6rem 0.4rem;
-        border:1px solid #00f3ff33;
-        background:rgba(0,243,255,0.04);
-        border-radius:2px;
-        text-shadow:0 0 12px #00f3ffaa;
-        margin-bottom:1.2rem;
-    ">[ SECURE UPLINK // APPLICANT PROFILE ]</div>
-    """, unsafe_allow_html=True)
-
-    st.markdown("""
-    <div style="
-        background:rgba(0,243,255,0.03);
-        border:1px solid #00f3ff1a;
-        border-radius:3px;
-        padding:1rem 1rem 0.8rem;
-        font-family:'Share Tech Mono',monospace;
-    ">
-      <!-- NAME BLOCK -->
-      <div style="margin-bottom:0.9rem;">
-        <div style="color:#00f3ff55;font-size:0.55rem;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:0.25rem;">// IDENTITY NODE</div>
-        <div style="color:#e8f4ff;font-size:1.05rem;font-weight:700;font-family:'Orbitron',sans-serif;letter-spacing:0.06em;text-shadow:0 0 10px #00f3ff44;">FATIMA Z. BELHADJ</div>
-      </div>
-
-      <div style="height:1px;background:linear-gradient(90deg,transparent,#00f3ff33,transparent);margin-bottom:0.9rem;"></div>
-
-      <!-- ACADEMIC -->
-      <div style="margin-bottom:0.75rem;">
-        <div style="color:#00f3ff55;font-size:0.52rem;letter-spacing:0.18em;margin-bottom:0.35rem;">// ACADEMIC TELEMETRY</div>
-        <div style="color:#aac8e0;font-size:0.7rem;line-height:1.8;">
-          <span style="color:#00f3ffaa;">▸</span> BSEMS (2024) — <span style="color:#00f3ff;">Summa Cum Laude</span><br>
-          <span style="color:#00f3ffaa;">▸</span> Cohort Rank: <span style="color:#00f3ff;">1st / Class</span><br>
-          <span style="color:#00f3ffaa;">▸</span> UHP Graduate — President's &amp; Dean's Lists
-        </div>
-      </div>
-
-      <div style="height:1px;background:linear-gradient(90deg,transparent,#00f3ff22,transparent);margin-bottom:0.75rem;"></div>
-
-      <!-- GLOBAL EXP -->
-      <div style="margin-bottom:0.75rem;">
-        <div style="color:#00f3ff55;font-size:0.52rem;letter-spacing:0.18em;margin-bottom:0.35rem;">// GLOBAL VECTOR</div>
-        <div style="color:#aac8e0;font-size:0.7rem;line-height:1.8;">
-          <span style="color:#00f3ffaa;">▸</span> Bilateral Exchange Scholar<br>
-          &nbsp;&nbsp;&nbsp;<span style="color:#8899bb;font-size:0.65rem;">Kansai Gaidai Univ., Japan</span>
-        </div>
-      </div>
-
-      <div style="height:1px;background:linear-gradient(90deg,transparent,#00f3ff22,transparent);margin-bottom:0.75rem;"></div>
-
-      <!-- INDUSTRY -->
-      <div style="margin-bottom:0.75rem;">
-        <div style="color:#00f3ff55;font-size:0.52rem;letter-spacing:0.18em;margin-bottom:0.35rem;">// INDUSTRY UPLINK</div>
-        <div style="color:#aac8e0;font-size:0.7rem;line-height:1.8;">
-          <span style="color:#00f3ffaa;">▸</span> Freelance Data Analyst<br>
-          &nbsp;&nbsp;&nbsp;<span style="color:#00f3ff;">Upwork Top-Rated Plus</span><br>
-          &nbsp;&nbsp;&nbsp;<span style="color:#8899bb;font-size:0.65rem;">Top 3% Globally</span>
-        </div>
-      </div>
-
-      <div style="height:1px;background:linear-gradient(90deg,transparent,#00f3ff22,transparent);margin-bottom:0.75rem;"></div>
-
-      <!-- RESEARCH -->
-      <div style="margin-bottom:0.75rem;">
-        <div style="color:#00f3ff55;font-size:0.52rem;letter-spacing:0.18em;margin-bottom:0.35rem;">// RESEARCH NODES</div>
-        <div style="color:#aac8e0;font-size:0.7rem;line-height:1.8;">
-          <span style="color:#00f3ffaa;">▸</span> <span style="color:#00f3ff;">3× Published</span> — IEEE / Springer<br>
-          <span style="color:#00f3ffaa;">▸</span> Presenter — <span style="color:#00f3ff;">Princeton Univ.</span><br>
-          &nbsp;&nbsp;&nbsp;<span style="color:#8899bb;font-size:0.65rem;">(Virtual, Invited)</span>
-        </div>
-      </div>
-
-      <div style="height:1px;background:linear-gradient(90deg,transparent,#00f3ff22,transparent);margin-bottom:0.75rem;"></div>
-
-      <!-- AWARDS -->
-      <div style="margin-bottom:0.4rem;">
-        <div style="color:#00f3ff55;font-size:0.52rem;letter-spacing:0.18em;margin-bottom:0.35rem;">// COMMENDATION LOG</div>
-        <div style="color:#aac8e0;font-size:0.7rem;line-height:1.8;">
-          <span style="color:#00f3ffaa;">▸</span> SSE Stonehenge Award<br>
-          &nbsp;&nbsp;&nbsp;<span style="color:#8899bb;font-size:0.65rem;">Best Undergrad Research</span><br>
-          <span style="color:#00f3ffaa;">▸</span> 2022 PGS Sustainability Award<br>
-          &nbsp;&nbsp;&nbsp;<span style="color:#8899bb;font-size:0.65rem;">Africa Regional</span>
-        </div>
-      </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown("<div style='margin:1.2rem 0 0.6rem;height:1px;background:linear-gradient(90deg,transparent,#ff003c44,transparent);'></div>", unsafe_allow_html=True)
-
-    st.markdown("""
-    <div style="
-        background:rgba(255,0,60,0.05);
-        border:1px solid #ff003c2a;
-        border-left:2px solid #ff003c88;
-        border-radius:2px;
-        padding:0.85rem 0.9rem;
-        font-family:'Rajdhani',sans-serif;
-        font-size:0.75rem;
-        color:#c8a0a8;
-        line-height:1.65;
-    ">
-    <span style="color:#ff003ccc;font-family:'Share Tech Mono',monospace;font-size:0.6rem;letter-spacing:0.15em;display:block;margin-bottom:0.5rem;">// DIRECT TRANSMISSION → DR. AKRAM</span>
-    GenAI memory bottlenecks are fundamentally <span style="color:#ff6080;">data pipeline optimization failures</span>. By applying the predictive computational modeling frameworks I use for global clients to your <span style="color:#00f3ff;">VICS Hybrid-NVM architecture</span>, we can <span style="color:#ff6080;">mathematically constrain latent drift</span>. The terminal below runs a live JavaScript physics simulation of this predictive constraint on <span style="color:#00f3ff;">DRAM state-space</span>.
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown("""
-    <div style="
-        margin-top:1.2rem;
-        font-family:'Share Tech Mono',monospace;
-        font-size:0.55rem;
-        color:#00f3ff33;
-        letter-spacing:0.15em;
-        text-align:center;
-    ">SYS.CLOCK: ANU-VICS-LAB // NODE-ACTIVE<br>ENC: AES-256 // UPLINK SECURED</div>
-    """, unsafe_allow_html=True)
-
-
-# ─────────────────────────────────────────────
-#  MAIN INTERFACE
-# ─────────────────────────────────────────────
-
-# ── GLOWING HEADER ──
-st.markdown("""
-<div style="text-align:center;padding:1.5rem 0 0.5rem;position:relative;">
-  <div style="
-      font-family:'Orbitron',sans-serif;
-      font-size:1.6rem;
-      font-weight:900;
-      letter-spacing:0.18em;
-      color:#00f3ff;
-      text-shadow:
-        0 0 10px #00f3ffcc,
-        0 0 30px #00f3ff88,
-        0 0 60px #00f3ff44,
-        0 0 100px #00f3ff22;
-      line-height:1.2;
-  ">VICS HYBRID-MEMORY</div>
-  <div style="
-      font-family:'Orbitron',sans-serif;
-      font-size:0.9rem;
-      font-weight:600;
-      letter-spacing:0.35em;
-      color:#00f3ff88;
-      margin-top:0.3rem;
-      text-shadow:0 0 20px #00f3ff55;
-  ">// KINETIC ENTROPY SIMULATOR //</div>
-  <div style="
-      position:absolute;top:50%;left:50%;
-      transform:translate(-50%,-50%);
-      width:600px;height:100px;
-      background:radial-gradient(ellipse, #00f3ff08 0%, transparent 70%);
-      pointer-events:none;
-  "></div>
-</div>
-<div style="height:1px;background:linear-gradient(90deg,transparent,#00f3ff66,transparent);margin:0.5rem 0 1.2rem;"></div>
-""", unsafe_allow_html=True)
-
-# ── STATUS BAR ──
-st.markdown("""
-<div style="
-    display:flex;justify-content:space-between;align-items:center;
-    font-family:'Share Tech Mono',monospace;font-size:0.6rem;
-    color:#00f3ff55;letter-spacing:0.14em;
-    border:1px solid #00f3ff12;
-    background:rgba(0,243,255,0.02);
-    padding:0.35rem 1rem;border-radius:2px;
-    margin-bottom:1.2rem;
-">
-  <span>SYS.CORE: ONLINE</span>
-  <span>NODE: ANU-VICS-HYBRID-NVM-v4.7</span>
-  <span>OPERATOR: BELHADJ.FZ</span>
-  <span>STATUS: AWAITING DIRECTIVE</span>
-</div>
-""", unsafe_allow_html=True)
-
-# ── TOGGLE ──
-col_tog_l, col_tog_c, col_tog_r = st.columns([1, 2, 1])
-with col_tog_c:
-    st.markdown("""
-    <div style="
-        text-align:center;
-        font-family:'Share Tech Mono',monospace;
-        font-size:0.62rem;
-        color:#00f3ff66;
-        letter-spacing:0.18em;
-        margin-bottom:0.4rem;
-    ">▼  DIRECTIVE CONTROL  ▼</div>
-    """, unsafe_allow_html=True)
-    algo_active = st.toggle("[ INITIATE PREDICTIVE DATA ALGORITHM ]", value=False)
-
-st.markdown("<div style='height:1.2rem;'></div>", unsafe_allow_html=True)
-
-# ─────────────────────────────────────────────
-#  JAVASCRIPT PHYSICS SIMULATION
-# ─────────────────────────────────────────────
-toggle_state = "true" if algo_active else "false"
-
-SIMULATION_HTML = f"""
+components.html("""
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <style>
-  * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-  html, body {{
-    background: #050505;
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: #000008;
     overflow: hidden;
-    width: 100%;
-    height: 100%;
     font-family: 'Share Tech Mono', monospace;
-  }}
-  canvas {{
-    display: block;
-    width: 100%;
-    height: 100%;
-  }}
-  #overlay {{
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    pointer-events: none;
-  }}
-  #status-tag {{
-    position: absolute;
-    top: 14px; left: 50%;
-    transform: translateX(-50%);
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.22em;
-    padding: 5px 22px;
-    border-radius: 2px;
-    border: 1px solid;
+    width: 100vw; height: 100vh;
+  }
+  canvas#bg { position:fixed; top:0; left:0; z-index:0; }
+
+  /* ── SCANLINE OVERLAY ── */
+  .scanlines {
+    position: fixed; top:0; left:0; width:100%; height:100%;
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent 0px, transparent 3px,
+      rgba(0,243,255,0.018) 3px, rgba(0,243,255,0.018) 4px
+    );
+    pointer-events: none; z-index: 1;
+    animation: scanmove 8s linear infinite;
+  }
+  @keyframes scanmove {
+    0%   { background-position: 0 0; }
+    100% { background-position: 0 100vh; }
+  }
+
+  /* ── VIGNETTE ── */
+  .vignette {
+    position: fixed; top:0; left:0; width:100%; height:100%;
+    background: radial-gradient(ellipse at center, transparent 45%, rgba(0,0,8,0.82) 100%);
+    pointer-events: none; z-index: 2;
+  }
+
+  /* ── DOSSIER PANEL ── */
+  .dossier {
+    position: fixed; left: 24px; top: 50%; transform: translateY(-50%);
+    width: 270px; z-index: 20;
+    background: rgba(0,10,30,0.62);
+    border: 1px solid rgba(0,243,255,0.28);
+    border-radius: 16px;
+    backdrop-filter: blur(18px) saturate(180%);
+    -webkit-backdrop-filter: blur(18px) saturate(180%);
+    box-shadow: 0 0 40px rgba(0,243,255,0.12), inset 0 0 30px rgba(0,243,255,0.04);
+    padding: 22px 18px 18px;
+    overflow: hidden;
+  }
+  .dossier::before {
+    content:'';
+    position:absolute; top:0; left:0; right:0; height:2px;
+    background: linear-gradient(90deg, transparent, #00f3ff, #7000ff, transparent);
+    animation: borderflow 3s linear infinite;
+  }
+  @keyframes borderflow {
+    0%   { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  .dossier-tag {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 9px; letter-spacing: 3px; color: #7000ff;
+    text-transform: uppercase; margin-bottom: 14px;
+  }
+  .dossier-name {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 15px; font-weight: 900;
+    color: #00f3ff;
+    text-shadow: 0 0 12px rgba(0,243,255,0.8);
+    letter-spacing: 1px; margin-bottom: 5px;
+  }
+  .dossier-sub {
+    font-size: 10px; color: rgba(0,243,255,0.5);
+    letter-spacing: 2px; margin-bottom: 16px;
+  }
+  .dossier-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0,243,255,0.3), transparent);
+    margin: 12px 0;
+  }
+  .dossier-row {
+    display: flex; align-items: flex-start; gap: 8px; margin-bottom: 9px;
+  }
+  .dossier-icon {
+    font-size: 11px; color: #7000ff; margin-top: 1px; flex-shrink: 0; width: 14px;
+  }
+  .dossier-label {
+    font-size: 9px; color: rgba(0,243,255,0.45); letter-spacing: 1.5px;
+    text-transform: uppercase; margin-bottom: 2px;
+  }
+  .dossier-value {
+    font-size: 10.5px; color: rgba(220,240,255,0.88); line-height: 1.4;
+  }
+  .badge {
+    display: inline-block; font-size: 8px;
+    padding: 2px 7px; border-radius: 3px; margin: 2px 2px 0 0;
+    letter-spacing: 1px; text-transform: uppercase;
+  }
+  .badge-cyan  { background: rgba(0,243,255,0.12); border:1px solid rgba(0,243,255,0.35); color:#00f3ff; }
+  .badge-violet{ background: rgba(112,0,255,0.12); border:1px solid rgba(112,0,255,0.4);  color:#b580ff; }
+  .badge-red   { background: rgba(255,0,85,0.12);  border:1px solid rgba(255,0,85,0.35);  color:#ff6699; }
+
+  /* ── MAIN CANVAS WRAPPER ── */
+  .command-canvas {
+    position: fixed; top:0; left:0; width:100%; height:100%;
+    z-index: 5; pointer-events: none;
+  }
+  #threeCanvas {
+    position: fixed; top:0; left:0;
+    width:100vw; height:100vh; z-index: 3;
+  }
+
+  /* ── TOP HEADER BAR ── */
+  .top-bar {
+    position: fixed; top:0; left:0; right:0; height:52px;
+    background: rgba(0,5,18,0.75);
+    border-bottom: 1px solid rgba(0,243,255,0.15);
+    backdrop-filter: blur(12px);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 28px; z-index: 25;
+  }
+  .top-bar-left {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 12px; font-weight: 700; letter-spacing: 4px;
+    color: #00f3ff; text-shadow: 0 0 12px rgba(0,243,255,0.7);
+  }
+  .top-bar-center {
+    font-size: 10px; letter-spacing: 3px; color: rgba(0,243,255,0.4);
+    text-transform: uppercase;
+  }
+  .top-bar-right {
+    display: flex; align-items: center; gap: 18px;
+  }
+  .status-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #ff0055; box-shadow: 0 0 8px #ff0055;
+    animation: pulse-dot 1.2s ease-in-out infinite;
+  }
+  .status-dot.stable { background: #00f3ff; box-shadow: 0 0 8px #00f3ff; animation: none; }
+  @keyframes pulse-dot {
+    0%,100%{ opacity:1; } 50%{ opacity:0.2; }
+  }
+  .status-text { font-size: 9px; letter-spacing: 2px; color: #ff0055; }
+  .status-text.stable { color: #00f3ff; }
+  .clock { font-size: 10px; letter-spacing: 2px; color: rgba(0,243,255,0.5); }
+
+  /* ── STAT OVERLAYS ── */
+  .stats-right {
+    position: fixed; right: 24px; top: 50%; transform: translateY(-50%);
+    width: 210px; z-index: 20;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .stat-card {
+    background: rgba(0,10,30,0.55);
+    border: 1px solid rgba(0,243,255,0.18);
+    border-radius: 10px;
+    backdrop-filter: blur(14px);
+    padding: 12px 15px;
+    position: relative; overflow: hidden;
+  }
+  .stat-card::after {
+    content:''; position:absolute; bottom:0; left:0; right:0; height:1px;
+    background: linear-gradient(90deg, transparent, var(--accent,#00f3ff), transparent);
+  }
+  .stat-title {
+    font-size: 8px; letter-spacing: 2.5px; color: rgba(0,243,255,0.45);
+    text-transform: uppercase; margin-bottom: 6px;
+  }
+  .stat-val {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 22px; font-weight: 700;
+    color: var(--accent, #00f3ff);
+    text-shadow: 0 0 14px var(--accent,#00f3ff);
+  }
+  .stat-unit { font-size: 10px; color: rgba(0,243,255,0.4); margin-left: 4px; }
+  .stat-bar-bg {
+    margin-top: 6px; height: 3px; background: rgba(0,243,255,0.1); border-radius: 2px;
+  }
+  .stat-bar-fill {
+    height: 100%; border-radius: 2px;
+    background: linear-gradient(90deg, var(--accent,#00f3ff), rgba(0,243,255,0.3));
+    transition: width 1.5s ease;
+  }
+  .stat-flicker { animation: flicker 2.3s infinite; }
+  @keyframes flicker {
+    0%,100%{opacity:1;} 92%{opacity:1;} 93%{opacity:0.4;} 94%{opacity:1;} 97%{opacity:0.7;} 98%{opacity:1;}
+  }
+
+  /* ── NEURAL ANCHOR BUTTON ── */
+  .anchor-wrap {
+    position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
+    z-index: 25; text-align: center;
+  }
+  #anchorBtn {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px; font-weight: 700; letter-spacing: 4px;
+    text-transform: uppercase;
+    padding: 16px 44px;
+    background: rgba(0,5,18,0.7);
+    border: 1.5px solid #ff0055;
+    border-radius: 4px; color: #ff0055;
+    cursor: pointer; position: relative; overflow: hidden;
+    text-shadow: 0 0 10px #ff0055;
+    box-shadow: 0 0 24px rgba(255,0,85,0.25), inset 0 0 16px rgba(255,0,85,0.06);
+    transition: all 0.4s ease;
+    backdrop-filter: blur(10px);
+  }
+  #anchorBtn::before {
+    content:''; position:absolute; top:-50%; left:-60%;
+    width: 40%; height: 200%; background: rgba(255,0,85,0.08);
+    transform: skewX(-20deg);
+    animation: btn-sweep 3s linear infinite;
+  }
+  @keyframes btn-sweep {
+    0%  { left:-60%; }
+    100%{ left:160%; }
+  }
+  #anchorBtn.stable {
+    border-color: #00f3ff; color: #00f3ff;
+    text-shadow: 0 0 10px #00f3ff;
+    box-shadow: 0 0 30px rgba(0,243,255,0.3), inset 0 0 20px rgba(0,243,255,0.06);
+  }
+  #anchorBtn.stable::before { background: rgba(0,243,255,0.08); }
+  .anchor-label {
+    font-size: 9px; letter-spacing: 3px; color: rgba(255,0,85,0.5);
+    margin-top: 8px; text-transform: uppercase;
+    transition: color 0.4s;
+  }
+  .anchor-label.stable { color: rgba(0,243,255,0.5); }
+
+  /* ── SHOCKWAVE ── */
+  .shockwave {
+    position: fixed; top:50%; left:50%;
+    transform: translate(-50%,-50%) scale(0);
+    width: 10px; height: 10px; border-radius: 50%;
+    border: 2px solid #00f3ff;
+    pointer-events: none; z-index: 30;
+    opacity: 0;
+  }
+  .shockwave.fire {
+    animation: shockboom 1.2s ease-out forwards;
+  }
+  @keyframes shockboom {
+    0%   { transform: translate(-50%,-50%) scale(0); opacity: 0.9; border-color:#ff0055; }
+    40%  { border-color: #7000ff; }
+    100% { transform: translate(-50%,-50%) scale(220); opacity: 0; border-color:#00f3ff; }
+  }
+
+  /* ── MAIN STATUS TEXT ── */
+  .status-overlay {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    text-align: center; pointer-events: none; z-index: 10;
+    margin-top: -120px;
+  }
+  .status-headline {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 13px; font-weight: 900; letter-spacing: 6px;
+    color: #ff0055; text-shadow: 0 0 20px #ff0055;
+    text-transform: uppercase;
+    animation: headline-flash 1.8s ease-in-out infinite;
     transition: all 0.6s ease;
-  }}
-  #hud-tl {{
-    position: absolute; top: 12px; left: 16px;
-    font-size: 9px; letter-spacing: 0.14em;
-    opacity: 0.5; line-height: 1.8;
-  }}
-  #hud-tr {{
-    position: absolute; top: 12px; right: 16px;
-    font-size: 9px; letter-spacing: 0.14em;
-    opacity: 0.5; text-align: right; line-height: 1.8;
-  }}
-  #hud-bl {{
-    position: absolute; bottom: 12px; left: 16px;
-    font-size: 9px; letter-spacing: 0.14em;
-    opacity: 0.5; line-height: 1.8;
-  }}
-  #hud-br {{
-    position: absolute; bottom: 12px; right: 16px;
-    font-size: 9px; letter-spacing: 0.14em;
-    opacity: 0.5; text-align: right; line-height: 1.8;
-  }}
-  .corner-tl, .corner-tr, .corner-bl, .corner-br {{
-    position: absolute;
-    width: 20px; height: 20px;
-    opacity: 0.4;
-  }}
-  .corner-tl {{ top: 6px; left: 6px;
-    border-top: 1px solid #00f3ff; border-left: 1px solid #00f3ff; }}
-  .corner-tr {{ top: 6px; right: 6px;
-    border-top: 1px solid #00f3ff; border-right: 1px solid #00f3ff; }}
-  .corner-bl {{ bottom: 6px; left: 6px;
-    border-bottom: 1px solid #00f3ff; border-left: 1px solid #00f3ff; }}
-  .corner-br {{ bottom: 6px; right: 6px;
-    border-bottom: 1px solid #00f3ff; border-right: 1px solid #00f3ff; }}
+  }
+  .status-headline.stable {
+    color: #00f3ff; text-shadow: 0 0 24px #00f3ff;
+    animation: none;
+  }
+  @keyframes headline-flash {
+    0%,100%{opacity:1;} 50%{opacity:0.3;}
+  }
+  .status-sub {
+    font-size: 9px; letter-spacing: 4px; color: rgba(0,243,255,0.35);
+    margin-top: 8px; text-transform: uppercase; transition: all 0.6s;
+  }
+  .status-sub.stable { color: rgba(0,243,255,0.6); }
+
+  /* ── FOOTER ── */
+  .cmd-footer {
+    position: fixed; bottom: 0; left: 0; right: 0; height: 44px;
+    background: rgba(0,5,18,0.75);
+    border-top: 1px solid rgba(0,243,255,0.1);
+    backdrop-filter: blur(12px);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 25;
+    font-size: 9px; letter-spacing: 2.5px; color: rgba(0,243,255,0.35);
+    text-transform: uppercase;
+  }
+  .cmd-footer span { color: rgba(0,243,255,0.6); }
+
+  /* ── CORNER DECORATORS ── */
+  .corner {
+    position: fixed; width: 30px; height: 30px; z-index: 22;
+    opacity: 0.5;
+  }
+  .corner.tl { top:60px; left:10px; border-top:1.5px solid #00f3ff; border-left:1.5px solid #00f3ff; }
+  .corner.tr { top:60px; right:10px; border-top:1.5px solid #00f3ff; border-right:1.5px solid #00f3ff; }
+  .corner.bl { bottom:52px; left:10px; border-bottom:1.5px solid #00f3ff; border-left:1.5px solid #00f3ff; }
+  .corner.br { bottom:52px; right:10px; border-bottom:1.5px solid #00f3ff; border-right:1.5px solid #00f3ff; }
 </style>
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet"/>
 </head>
 <body>
-<canvas id="c"></canvas>
-<div id="overlay">
-  <div class="corner-tl"></div>
-  <div class="corner-tr"></div>
-  <div class="corner-bl"></div>
-  <div class="corner-br"></div>
-  <div id="status-tag">INITIALIZING...</div>
-  <div id="hud-tl" style="color:#00f3ff;">
-    PARTICLE COUNT: 500<br>
-    DRAM NODES: ACTIVE<br>
-    SIM ENGINE: v4.7.2
-  </div>
-  <div id="hud-tr" style="color:#00f3ff;">
-    LAB: ANU-VICS<br>
-    ARCH: HYBRID-NVM<br>
-    FRAME: <span id="fps">--</span> Hz
-  </div>
-  <div id="hud-bl" style="color:#00f3ff;">
-    OPERATOR: BELHADJ.FZ<br>
-    MODE: <span id="mode-label">--</span>
-  </div>
-  <div id="hud-br" style="color:#00f3ff;">
-    ENTROPY: <span id="entropy-val">--</span><br>
-    CONSTRAINT: <span id="constraint-val">--</span>
+
+<!-- BG Three.js Canvas -->
+<canvas id="threeCanvas"></canvas>
+
+<!-- Scanlines + Vignette -->
+<div class="scanlines"></div>
+<div class="vignette"></div>
+
+<!-- Corners -->
+<div class="corner tl"></div>
+<div class="corner tr"></div>
+<div class="corner bl"></div>
+<div class="corner br"></div>
+
+<!-- Top Bar -->
+<div class="top-bar">
+  <div class="top-bar-left">◈ NCI // VICS-LAB</div>
+  <div class="top-bar-center">DRAM PRESSURE MANAGEMENT SYSTEM // ANU R&D NODE 7</div>
+  <div class="top-bar-right">
+    <div id="statusDot" class="status-dot"></div>
+    <div id="statusText" class="status-text">ENTROPY CRITICAL</div>
+    <div class="clock" id="clockEl">00:00:00</div>
   </div>
 </div>
 
+<!-- Dossier -->
+<div class="dossier">
+  <div class="dossier-tag">◈ Operator Dossier // Classified</div>
+  <div class="dossier-name">Fatima Z. Belhadj</div>
+  <div class="dossier-sub">ANU · MPhil Candidate · Systems Engineering</div>
+  <div class="dossier-divider"></div>
+  <div class="dossier-row">
+    <div class="dossier-icon">▸</div>
+    <div>
+      <div class="dossier-label">Academic Standing</div>
+      <div class="dossier-value">Ranked 1st · BSEMS Cohort 2024</div>
+      <div style="margin-top:4px">
+        <span class="badge badge-cyan">Summa Cum Laude</span>
+        <span class="badge badge-violet">Honors Program</span>
+      </div>
+    </div>
+  </div>
+  <div class="dossier-row">
+    <div class="dossier-icon">▸</div>
+    <div>
+      <div class="dossier-label">Academic Distinctions</div>
+      <div class="dossier-value">President's List · Dean's List</div>
+      <div style="margin-top:4px">
+        <span class="badge badge-violet">Bilateral Exchange · Japan</span>
+      </div>
+    </div>
+  </div>
+  <div class="dossier-row">
+    <div class="dossier-icon">▸</div>
+    <div>
+      <div class="dossier-label">Professional Grade</div>
+      <div class="dossier-value">Top-Rated Plus Data Analyst</div>
+      <div style="margin-top:4px">
+        <span class="badge badge-cyan">Upwork Top 3%</span>
+      </div>
+    </div>
+  </div>
+  <div class="dossier-row">
+    <div class="dossier-icon">▸</div>
+    <div>
+      <div class="dossier-label">Research Publications</div>
+      <div class="dossier-value">3× Published · IEEE / Springer</div>
+      <div style="margin-top:4px">
+        <span class="badge badge-violet">Princeton Presenter</span>
+      </div>
+    </div>
+  </div>
+  <div class="dossier-row">
+    <div class="dossier-icon">▸</div>
+    <div>
+      <div class="dossier-label">Awards</div>
+      <div style="margin-top:4px">
+        <span class="badge badge-red">SSE Stonehenge Award</span>
+        <span class="badge badge-cyan">PGS Sustainability Africa</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Center Status Text -->
+<div class="status-overlay">
+  <div class="status-headline" id="statusHeadline">⚠ CRITICAL ENTROPY LEAK</div>
+  <div class="status-sub" id="statusSub">DRAM CUBE DESTABILIZED // AWAITING NEURAL ANCHOR</div>
+</div>
+
+<!-- Shockwave -->
+<div class="shockwave" id="shockwave"></div>
+
+<!-- Neural Anchor Button -->
+<div class="anchor-wrap">
+  <button id="anchorBtn" onclick="engageAnchor()">⬡ ENGAGE NEURAL ANCHOR</button>
+  <div class="anchor-label" id="anchorLabel">BELHADJ CONSTRAINT :: DISENGAGED</div>
+</div>
+
+<!-- Stats Right -->
+<div class="stats-right">
+  <div class="stat-card stat-flicker" style="--accent:#ff0055">
+    <div class="stat-title">DRAM Spillage Index</div>
+    <div><span class="stat-val" id="stat1">87.4</span><span class="stat-unit">%</span></div>
+    <div class="stat-bar-bg"><div class="stat-bar-fill" id="bar1" style="width:87.4%; background:linear-gradient(90deg,#ff0055,rgba(255,0,85,0.3))"></div></div>
+  </div>
+  <div class="stat-card" style="--accent:#7000ff">
+    <div class="stat-title">Write-Rationing Efficiency</div>
+    <div><span class="stat-val" id="stat2">12.1</span><span class="stat-unit">%</span></div>
+    <div class="stat-bar-bg"><div class="stat-bar-fill" id="bar2" style="width:12.1%; background:linear-gradient(90deg,#7000ff,rgba(112,0,255,0.3))"></div></div>
+  </div>
+  <div class="stat-card stat-flicker" style="--accent:#ff0055">
+    <div class="stat-title">Latent Trajectory Variance</div>
+    <div><span class="stat-val" id="stat3">±3.82</span><span class="stat-unit">σ</span></div>
+    <div class="stat-bar-bg"><div class="stat-bar-fill" id="bar3" style="width:76%; background:linear-gradient(90deg,#ff0055,rgba(255,0,85,0.3))"></div></div>
+  </div>
+  <div class="stat-card" style="--accent:#00f3ff">
+    <div class="stat-title">Neural Coherence</div>
+    <div><span class="stat-val" id="stat4">4.3</span><span class="stat-unit">%</span></div>
+    <div class="stat-bar-bg"><div class="stat-bar-fill" id="bar4" style="width:4.3%; background:linear-gradient(90deg,#00f3ff,rgba(0,243,255,0.3))"></div></div>
+  </div>
+</div>
+
+<!-- Footer -->
+<div class="cmd-footer">
+  Architecture proposed by <span>&nbsp;F.Z. Belhadj&nbsp;</span> | ANU MPhil Candidate | <span>&nbsp;Systems Engineering Apex&nbsp;</span> | VICS Lab · Shoaib Akram
+</div>
+
+<!-- Three.js CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
 <script>
-const ALGO_ACTIVE = {toggle_state};
+// ── STATE ──
+let isStable = false;
+let mouseX = 0, mouseY = 0;
+let targetRotX = 0, targetRotY = 0;
+const W = window.innerWidth, H = window.innerHeight;
 
-const canvas = document.getElementById('c');
-const ctx = canvas.getContext('2d');
-const statusTag = document.getElementById('status-tag');
-const fpsEl = document.getElementById('fps');
-const modeEl = document.getElementById('mode-label');
-const entEl = document.getElementById('entropy-val');
-const conEl = document.getElementById('constraint-val');
+// ── THREE.JS SETUP ──
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('threeCanvas'), antialias: true, alpha: true });
+renderer.setSize(W, H);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setClearColor(0x000008, 1);
 
-function resize() {{
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-}}
-resize();
-window.addEventListener('resize', resize);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(60, W/H, 0.1, 2000);
+camera.position.set(0, 0, 280);
 
-// ── PARTICLE CONFIG ──
-const N = 500;
-const particles = [];
-let transition = 0; // 0 = full chaos, 1 = full constrained
-const TARGET_TRANSITION = ALGO_ACTIVE ? 1.0 : 0.0;
-const TRANSITION_SPEED = 0.018;
+// ── NEBULA BACKGROUND ──
+const bgGeo = new THREE.PlaneGeometry(2000, 2000);
+const bgMat = new THREE.ShaderMaterial({
+  uniforms: {
+    uTime: { value: 0 },
+    uPressure: { value: 1.0 }
+  },
+  vertexShader: `
+    varying vec2 vUv;
+    void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }
+  `,
+  fragmentShader: `
+    uniform float uTime;
+    uniform float uPressure;
+    varying vec2 vUv;
+    float rand(vec2 c){ return fract(sin(dot(c.xy, vec2(12.9898,78.233))) * 43758.5453); }
+    float noise(vec2 p){
+      vec2 i=floor(p), f=fract(p);
+      float a=rand(i), b=rand(i+vec2(1,0)), c2=rand(i+vec2(0,1)), d=rand(i+vec2(1,1));
+      vec2 u=f*f*(3.0-2.0*f);
+      return mix(mix(a,b,u.x),mix(c2,d,u.x),u.y);
+    }
+    void main(){
+      vec2 uv = vUv - 0.5;
+      float dist = length(uv);
+      float n1 = noise(uv * 3.0 + uTime * 0.06);
+      float n2 = noise(uv * 6.0 - uTime * 0.04);
+      float nebula = n1 * 0.6 + n2 * 0.4;
+      vec3 col1 = mix(vec3(0.0,0.0,0.03), vec3(0.28,0.0,1.0)*0.18, nebula);
+      vec3 coldark = mix(col1, vec3(1.0,0.0,0.33)*0.12 * uPressure, n2 * 0.5);
+      float stars = step(0.985, rand(vUv * 800.0 + floor(uTime*0.1)));
+      vec3 final = coldark + vec3(stars) * 0.6;
+      gl_FragColor = vec4(final, 1.0);
+    }
+  `,
+  side: THREE.FrontSide,
+  depthWrite: false
+});
+const bgMesh = new THREE.Mesh(bgGeo, bgMat);
+bgMesh.position.z = -500;
+scene.add(bgMesh);
 
-// Pre-compute constrained positions on a sphere
-function spherePoint(i, total) {{
-  const phi = Math.acos(1 - 2 * (i + 0.5) / total);
-  const theta = Math.PI * (1 + Math.sqrt(5)) * i;
-  const r = 0.38;
-  const cx = canvas.width / 2;
-  const cy = canvas.height / 2;
-  // 3D sphere projected (pseudo-3D rotation)
-  return {{ phi, theta, r, cx, cy }};
-}}
+// ── PARTICLE CUBE ──
+const N = 2000;
+const geo = new THREE.BufferGeometry();
+const positions = new Float32Array(N * 3);
+const colors    = new Float32Array(N * 3);
+const sizes     = new Float32Array(N);
+const basePos   = new Float32Array(N * 3); // crystal target
+const randomPos = new Float32Array(N * 3); // chaos positions
+const velocities= new Float32Array(N * 3);
 
-for (let i = 0; i < N; i++) {{
-  const cx = canvas.width / 2;
-  const cy = canvas.height / 2;
-  particles.push({{
-    // Chaos state
-    x: Math.random() * canvas.width,
-    y: Math.random() * canvas.height,
-    vx: (Math.random() - 0.5) * 4.5,
-    vy: (Math.random() - 0.5) * 4.5,
-    ax: 0, ay: 0,
-    // Constrained state (sphere)
-    phi: Math.acos(1 - 2 * (i + 0.5) / N),
-    theta: Math.PI * (1 + Math.sqrt(5)) * i,
-    r: Math.min(canvas.width, canvas.height) * 0.3,
-    size: Math.random() * 1.8 + 0.6,
-    phase: Math.random() * Math.PI * 2,
-    // Colour interpolation
-    colorPhase: Math.random() * Math.PI * 2,
-  }});
-}}
+// Build crystal cube lattice (±80 box)
+const side = Math.cbrt(N) | 0; // ~12
+let idx = 0;
+for(let x=0; x<side && idx<N; x++)
+  for(let y=0; y<side && idx<N; y++)
+    for(let z=0; z<side && idx<N; z++){
+      const px = (x/(side-1)-0.5)*160;
+      const py = (y/(side-1)-0.5)*160;
+      const pz = (z/(side-1)-0.5)*160;
+      basePos[idx*3]   = px;
+      basePos[idx*3+1] = py;
+      basePos[idx*3+2] = pz;
+      idx++;
+    }
+// Fill leftover randomly on cube surface
+for(let i=idx; i<N; i++){
+  const face = Math.floor(Math.random()*6);
+  let px,py,pz;
+  const r=()=>(Math.random()-0.5)*160;
+  if(face===0){px=80;py=r();pz=r();}
+  else if(face===1){px=-80;py=r();pz=r();}
+  else if(face===2){py=80;px=r();pz=r();}
+  else if(face===3){py=-80;px=r();pz=r();}
+  else if(face===4){pz=80;px=r();py=r();}
+  else{pz=-80;px=r();py=r();}
+  basePos[i*3]=px; basePos[i*3+1]=py; basePos[i*3+2]=pz;
+}
 
-let sphereAngleY = 0;
-let sphereAngleX = 0;
-let lastTime = performance.now();
-let frameCount = 0;
-let fpsTimer = 0;
-let currentFps = 60;
+// Random explosive positions
+for(let i=0; i<N; i++){
+  const theta = Math.random()*Math.PI*2;
+  const phi   = Math.random()*Math.PI;
+  const r2    = 80 + Math.random()*220;
+  randomPos[i*3]   = r2*Math.sin(phi)*Math.cos(theta);
+  randomPos[i*3+1] = r2*Math.sin(phi)*Math.sin(theta);
+  randomPos[i*3+2] = r2*Math.cos(phi);
+  velocities[i*3]   = (Math.random()-0.5)*0.4;
+  velocities[i*3+1] = (Math.random()-0.5)*0.4;
+  velocities[i*3+2] = (Math.random()-0.5)*0.4;
+}
 
-function lerp(a, b, t) {{ return a + (b - a) * t; }}
+// Init at random
+for(let i=0;i<N*3;i++) positions[i] = randomPos[i];
 
-function getConstrainedPos(p, t) {{
-  const cx = canvas.width / 2;
-  const cy = canvas.height / 2;
-  const r = Math.min(canvas.width, canvas.height) * 0.28;
-  // Rotate sphere
-  const x0 = r * Math.sin(p.phi) * Math.cos(p.theta);
-  const y0 = r * Math.cos(p.phi);
-  const z0 = r * Math.sin(p.phi) * Math.sin(p.theta);
-  // Y-axis rotation
-  const cosY = Math.cos(sphereAngleY);
-  const sinY = Math.sin(sphereAngleY);
-  const x1 = x0 * cosY - z0 * sinY;
-  const z1 = x0 * sinY + z0 * cosY;
-  // X-axis rotation
-  const cosX = Math.cos(sphereAngleX);
-  const sinX = Math.sin(sphereAngleX);
-  const y1 = y0 * cosX - z1 * sinX;
-  const z2 = y0 * sinX + z1 * cosX;
-  // Perspective
-  const fov = 500;
-  const scale = fov / (fov + z2);
-  return {{ x: cx + x1 * scale, y: cy + y1 * scale, z: z2, scale }};
-}}
+// Colors: red for chaos, cyan for stable
+for(let i=0;i<N;i++){
+  colors[i*3]   = 1.0;
+  colors[i*3+1] = 0.0;
+  colors[i*3+2] = 0.2;
+  sizes[i] = 1.5 + Math.random()*2.0;
+}
 
-function draw(timestamp) {{
-  const dt = Math.min((timestamp - lastTime) / 16.67, 3);
-  lastTime = timestamp;
+geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+geo.setAttribute('color',    new THREE.BufferAttribute(colors,    3));
+geo.setAttribute('size',     new THREE.BufferAttribute(sizes,     1));
 
-  // FPS
-  frameCount++;
-  fpsTimer += dt * 16.67;
-  if (fpsTimer > 500) {{
-    currentFps = Math.round(frameCount / (fpsTimer / 1000));
-    frameCount = 0; fpsTimer = 0;
-    fpsEl.textContent = currentFps;
-  }}
+const particleMat = new THREE.ShaderMaterial({
+  uniforms: {
+    uTime:    { value: 0 },
+    uStable:  { value: 0.0 }
+  },
+  vertexShader: `
+    attribute float size;
+    attribute vec3 color;
+    varying vec3 vColor;
+    uniform float uTime;
+    uniform float uStable;
+    void main(){
+      vColor = color;
+      vec4 mv = modelViewMatrix * vec4(position, 1.0);
+      float s = size * (1.0 + 0.3*sin(uTime*4.0 + position.x));
+      gl_PointSize = s * (300.0 / -mv.z);
+      gl_Position = projectionMatrix * mv;
+    }
+  `,
+  fragmentShader: `
+    varying vec3 vColor;
+    void main(){
+      float d = length(gl_PointCoord - vec2(0.5));
+      if(d > 0.5) discard;
+      float glow = 1.0 - d*2.0;
+      glow = pow(glow, 1.8);
+      gl_FragColor = vec4(vColor * glow, glow * 0.95);
+    }
+  `,
+  vertexColors: true,
+  transparent: true,
+  depthWrite: false,
+  blending: THREE.AdditiveBlending
+});
+
+const particles = new THREE.Points(geo, particleMat);
+scene.add(particles);
+
+// ── CORE GLOW SPHERE ──
+const coreGeo = new THREE.SphereGeometry(14, 32, 32);
+const coreMat = new THREE.MeshBasicMaterial({ color: 0xff0055, transparent: true, opacity: 0.85 });
+const core = new THREE.Mesh(coreGeo, coreMat);
+scene.add(core);
+
+const coreGlowGeo = new THREE.SphereGeometry(22, 32, 32);
+const coreGlowMat = new THREE.MeshBasicMaterial({ color: 0xff0033, transparent: true, opacity: 0.2, side: THREE.BackSide });
+const coreGlow = new THREE.Mesh(coreGlowGeo, coreGlowMat);
+scene.add(coreGlow);
+
+// ── CUBE WIREFRAME (stable) ──
+const wireGeo = new THREE.BoxGeometry(162, 162, 162);
+const wireMat = new THREE.MeshBasicMaterial({ color: 0x00f3ff, wireframe: true, transparent: true, opacity: 0 });
+const wireBox = new THREE.Mesh(wireGeo, wireMat);
+scene.add(wireBox);
+
+// ── RING DECORATORS ──
+function makeRing(r, axis){
+  const rGeo = new THREE.TorusGeometry(r, 0.6, 8, 80);
+  const rMat = new THREE.MeshBasicMaterial({ color: 0x7000ff, transparent: true, opacity: 0.35 });
+  const ring = new THREE.Mesh(rGeo, rMat);
+  if(axis==='x') ring.rotation.x = Math.PI/2;
+  if(axis==='z') ring.rotation.z = Math.PI/3;
+  scene.add(ring); return ring;
+}
+const ring1 = makeRing(100,'y');
+const ring2 = makeRing(120,'x');
+const ring3 = makeRing(90, 'z');
+
+// ── CLOCK ──
+function updateClock(){
+  const d=new Date();
+  document.getElementById('clockEl').textContent =
+    String(d.getHours()).padStart(2,'0')+':'+
+    String(d.getMinutes()).padStart(2,'0')+':'+
+    String(d.getSeconds()).padStart(2,'0');
+}
+setInterval(updateClock, 1000);
+
+// ── MOUSE ──
+document.addEventListener('mousemove', e=>{
+  mouseX = (e.clientX/W - 0.5)*2;
+  mouseY = (e.clientY/H - 0.5)*2;
+});
+
+// ── ENGAGE ANCHOR ──
+let transitionProgress = 0;
+let transitionActive   = false;
+
+function engageAnchor(){
+  if(transitionActive) return;
+  isStable = !isStable;
+  transitionActive = true; transitionProgress = 0;
+
+  // Shockwave
+  const sw = document.getElementById('shockwave');
+  sw.classList.remove('fire');
+  void sw.offsetWidth;
+  sw.classList.add('fire');
+
+  const btn    = document.getElementById('anchorBtn');
+  const label  = document.getElementById('anchorLabel');
+  const dot    = document.getElementById('statusDot');
+  const stText = document.getElementById('statusText');
+  const hl     = document.getElementById('statusHeadline');
+  const sub    = document.getElementById('statusSub');
+
+  if(isStable){
+    btn.textContent    = '⬡ DISENGAGE NEURAL ANCHOR';
+    btn.classList.add('stable');
+    label.textContent  = 'BELHADJ CONSTRAINT :: ENGAGED';
+    label.classList.add('stable');
+    dot.classList.add('stable');
+    stText.textContent = 'DRAM PRESSURE NOMINAL';
+    stText.classList.add('stable');
+    hl.textContent     = '✦ DRAM PRESSURE STABILIZED';
+    hl.classList.add('stable');
+    sub.textContent    = 'BELHADJ CONSTRAINT ACTIVE // CRYSTALLINE COHERENCE ACHIEVED';
+    sub.classList.add('stable');
+    stabilizeStats();
+  } else {
+    btn.textContent    = '⬡ ENGAGE NEURAL ANCHOR';
+    btn.classList.remove('stable');
+    label.textContent  = 'BELHADJ CONSTRAINT :: DISENGAGED';
+    label.classList.remove('stable');
+    dot.classList.remove('stable');
+    stText.textContent = 'ENTROPY CRITICAL';
+    stText.classList.remove('stable');
+    hl.textContent     = '⚠ CRITICAL ENTROPY LEAK';
+    hl.classList.remove('stable');
+    sub.textContent    = 'DRAM CUBE DESTABILIZED // AWAITING NEURAL ANCHOR';
+    sub.classList.remove('stable');
+    destabilizeStats();
+  }
+}
+
+// ── STAT ANIMATIONS ──
+function animateStat(id, target, suffix, barId, barPct){
+  const el  = document.getElementById(id);
+  const bar = document.getElementById(barId);
+  const start = parseFloat(el.textContent);
+  const dur = 2000; const t0 = Date.now();
+  function step(){
+    const prog = Math.min((Date.now()-t0)/dur, 1);
+    const ease = 1-Math.pow(1-prog,3);
+    const cur  = start + (target-start)*ease;
+    el.textContent = (typeof target==='number'? cur.toFixed(typeof suffix==='string'&&suffix.includes('σ')?2:1) : target)+suffix;
+    if(bar) bar.style.width = (barPct * ease + (parseFloat(bar.style.width)||0)*(1-ease)).toFixed(1)+'%';
+    if(prog<1) requestAnimationFrame(step);
+  }
+  step();
+}
+function stabilizeStats(){
+  document.getElementById('stat3').textContent='±3.82';
+  animateStat('stat1', 3.2, '',  'bar1', 3.2);
+  animateStat('stat2', 98.7,'',  'bar2', 98.7);
+  animateStat('stat4', 99.1,'',  'bar4', 99.1);
+  setTimeout(()=>{ document.getElementById('stat3').textContent='±0.02'; document.getElementById('bar3').style.width='2%'; },1200);
+  document.getElementById('bar1').style.background='linear-gradient(90deg,#00f3ff,rgba(0,243,255,0.3))';
+  document.getElementById('bar3').style.background='linear-gradient(90deg,#00f3ff,rgba(0,243,255,0.3))';
+}
+function destabilizeStats(){
+  animateStat('stat1',87.4,'', 'bar1',87.4);
+  animateStat('stat2',12.1,'', 'bar2',12.1);
+  animateStat('stat4', 4.3,'', 'bar4', 4.3);
+  setTimeout(()=>{ document.getElementById('stat3').textContent='±3.82'; document.getElementById('bar3').style.width='76%'; },600);
+  document.getElementById('bar1').style.background='linear-gradient(90deg,#ff0055,rgba(255,0,85,0.3))';
+  document.getElementById('bar3').style.background='linear-gradient(90deg,#ff0055,rgba(255,0,85,0.3))';
+}
+
+// ── ANIMATION LOOP ──
+let clock = 0;
+function animate(){
+  requestAnimationFrame(animate);
+  clock += 0.016;
+  bgMat.uniforms.uTime.value = clock;
+  particleMat.uniforms.uTime.value = clock;
+
+  // Smooth camera tilt from mouse
+  targetRotY += (mouseX * 0.3 - targetRotY) * 0.04;
+  targetRotX += (mouseY * 0.2 - targetRotX) * 0.04;
+  particles.rotation.y += 0.003 + targetRotY * 0.005;
+  particles.rotation.x += 0.001 + targetRotX * 0.005;
+  wireBox.rotation.y = particles.rotation.y;
+  wireBox.rotation.x = particles.rotation.x;
+  ring1.rotation.y   = clock * 0.4;
+  ring2.rotation.z   = clock * 0.3;
+  ring3.rotation.x   = clock * 0.25;
 
   // Transition
-  if (transition < TARGET_TRANSITION) transition = Math.min(transition + TRANSITION_SPEED * dt, TARGET_TRANSITION);
-  else if (transition > TARGET_TRANSITION) transition = Math.max(transition - TRANSITION_SPEED * dt, TARGET_TRANSITION);
+  if(transitionActive){
+    transitionProgress = Math.min(transitionProgress + 0.018, 1);
+    if(transitionProgress >= 1) transitionActive = false;
+  }
+  const t = isStable ? transitionProgress : 1-transitionProgress;
+  const ease = t<0.5 ? 4*t*t*t : 1-Math.pow(-2*t+2,3)/2;
 
-  // Sphere rotation
-  sphereAngleY += 0.003 * dt;
-  sphereAngleX += 0.001 * dt;
+  for(let i=0;i<N;i++){
+    const tx = basePos[i*3],   ty = basePos[i*3+1],   tz = basePos[i*3+2];
+    const cx = randomPos[i*3], cy = randomPos[i*3+1], cz = randomPos[i*3+2];
 
-  // ── CLEAR ──
-  ctx.fillStyle = `rgba(5,5,5,${{lerp(0.18, 0.22, transition)}})`;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // Chaos drift
+    if(!isStable || transitionActive){
+      randomPos[i*3]   += velocities[i*3]   * (1-ease);
+      randomPos[i*3+1] += velocities[i*3+1] * (1-ease);
+      randomPos[i*3+2] += velocities[i*3+2] * (1-ease);
+      // Bounce
+      for(let ax=0;ax<3;ax++){
+        if(Math.abs(randomPos[i*3+ax])>320){ velocities[i*3+ax]*=-1; }
+      }
+      // Shiver
+      const shiver = (1-ease)*2.0;
+      positions[i*3]   = tx*(ease) + (randomPos[i*3]  +  (Math.random()-0.5)*shiver)*(1-ease);
+      positions[i*3+1] = ty*(ease) + (randomPos[i*3+1]+ (Math.random()-0.5)*shiver)*(1-ease);
+      positions[i*3+2] = tz*(ease) + (randomPos[i*3+2]+ (Math.random()-0.5)*shiver)*(1-ease);
+    } else {
+      // Stable: slight breathe
+      const breathe = Math.sin(clock*1.5 + i*0.1)*0.4;
+      positions[i*3]   = tx + breathe*(tx/160);
+      positions[i*3+1] = ty + breathe*(ty/160);
+      positions[i*3+2] = tz + breathe*(tz/160);
+    }
 
-  // ── BACKGROUND GLOW ──
-  const bgGrad = ctx.createRadialGradient(
-    canvas.width/2, canvas.height/2, 0,
-    canvas.width/2, canvas.height/2, canvas.width * 0.4
-  );
-  if (transition > 0.01) {{
-    bgGrad.addColorStop(0, `rgba(0,243,255,${{0.025 * transition}})`);
-    bgGrad.addColorStop(1, 'transparent');
-  }} else {{
-    bgGrad.addColorStop(0, `rgba(255,30,60,${{0.02 * (1 - transition)}})`);
-    bgGrad.addColorStop(1, 'transparent');
-  }}
-  ctx.fillStyle = bgGrad;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // Color: red→cyan
+    const rt = Math.min(ease + (Math.random()-0.5)*0.1, 1);
+    colors[i*3]   = 1.0 - rt;           // R
+    colors[i*3+1] = rt * 0.95;          // G
+    colors[i*3+2] = 0.2 + rt * 0.8;    // B
+    sizes[i]      = (1.5 + Math.random()*2.0) * (isStable ? 1.0 : 1.0+Math.random()*0.5);
+  }
 
-  // ── UPDATE & DRAW PARTICLES ──
-  // Connection pass first (behind particles)
-  for (let i = 0; i < N; i += 3) {{
-    const p = particles[i];
-    const cp = getConstrainedPos(p, transition);
-    const px = lerp(p.x, cp.x, transition);
-    const py = lerp(p.y, cp.y, transition);
+  geo.attributes.position.needsUpdate = true;
+  geo.attributes.color.needsUpdate    = true;
+  geo.attributes.size.needsUpdate     = true;
 
-    // Draw connections to nearby particles
-    for (let j = i + 1; j < Math.min(i + 8, N); j++) {{
-      const q = particles[j];
-      const cq = getConstrainedPos(q, transition);
-      const qx = lerp(q.x, cq.x, transition);
-      const qy = lerp(q.y, cq.y, transition);
-      const dx = px - qx, dy = py - qy;
-      const dist = Math.sqrt(dx*dx + dy*dy);
-      const maxDist = lerp(120, 40, transition);
-      if (dist < maxDist) {{
-        const alpha = (1 - dist / maxDist) * lerp(0.25, 0.15, transition);
-        if (transition < 0.5) {{
-          ctx.strokeStyle = `rgba(${{lerp(255,0,transition*2)}}, ${{lerp(50,100,transition)}}, ${{lerp(20,255,transition*2)}}, ${{alpha}})`;
-        }} else {{
-          ctx.strokeStyle = `rgba(0, ${{Math.floor(lerp(100,243,(transition-0.5)*2))}}, ${{Math.floor(lerp(100,255,(transition-0.5)*2))}}, ${{alpha}})`;
-        }}
-        ctx.lineWidth = lerp(0.8, 0.4, transition);
-        ctx.beginPath();
-        ctx.moveTo(px, py);
-        ctx.lineTo(qx, qy);
-        ctx.stroke();
-      }}
-    }}
-  }}
+  // Core sphere color
+  coreMat.color.setRGB(1-ease, ease*0.95, 0.2+ease*0.8);
+  coreGlowMat.color.setRGB(1-ease, ease*0.95, 0.2+ease*0.8);
+  coreGlow.scale.setScalar(1 + 0.15*Math.sin(clock*3));
+  core.scale.setScalar(1 + 0.08*Math.sin(clock*5));
 
-  // Particle draw pass
-  for (let i = 0; i < N; i++) {{
-    const p = particles[i];
-    const cp = getConstrainedPos(p, transition);
+  // Wire box
+  wireMat.opacity = ease * 0.45;
+  bgMat.uniforms.uPressure.value = 1-ease;
 
-    // Chaos physics
-    if (transition < 0.99) {{
-      p.ax = (Math.random() - 0.5) * 0.8 * (1 - transition);
-      p.ay = (Math.random() - 0.5) * 0.8 * (1 - transition);
-      p.vx = (p.vx + p.ax * dt) * (1 - 0.01 * dt);
-      p.vy = (p.vy + p.ay * dt) * (1 - 0.01 * dt);
-      const speed = Math.sqrt(p.vx*p.vx + p.vy*p.vy);
-      const maxSpeed = lerp(4.0, 0.2, transition);
-      if (speed > maxSpeed) {{ p.vx *= maxSpeed/speed; p.vy *= maxSpeed/speed; }}
-      p.x = (p.x + p.vx * dt + canvas.width) % canvas.width;
-      p.y = (p.y + p.vy * dt + canvas.height) % canvas.height;
-    }}
+  renderer.render(scene, camera);
+}
 
-    const px = lerp(p.x, cp.x, transition);
-    const py = lerp(p.y, cp.y, transition);
-    const depth = lerp(0, cp.scale, transition);
-    const baseSize = p.size * lerp(1, depth * 1.4, transition);
+window.addEventListener('resize', ()=>{
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  camera.aspect = window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+});
 
-    // Color
-    const t2 = transition;
-    let r, g, b, glowR, glowG, glowB;
-    if (t2 < 0.5) {{
-      // Chaos: reds/oranges
-      const hue = lerp(0, 30, (Math.sin(timestamp * 0.001 + p.colorPhase) + 1) / 2);
-      r = 220 + Math.floor(35 * Math.random());
-      g = Math.floor(50 + 80 * (1 - t2 * 2));
-      b = Math.floor(10 + 20 * Math.random());
-      glowR = 255; glowG = 30; glowB = 0;
-    }} else {{
-      // Constrained: cyan/blue
-      const pulse = (Math.sin(timestamp * 0.002 + p.colorPhase) + 1) / 2;
-      r = Math.floor(lerp(0, 0, (t2-0.5)*2));
-      g = Math.floor(lerp(100, 200 + 43 * pulse, (t2-0.5)*2));
-      b = Math.floor(lerp(200, 255, (t2-0.5)*2));
-      glowR = 0; glowG = 243; glowB = 255;
-    }}
-
-    const glowAlpha = lerp(0.15, 0.35, transition) + 0.1 * Math.sin(timestamp * 0.003 + p.phase);
-
-    // Glow halo
-    const grad = ctx.createRadialGradient(px, py, 0, px, py, baseSize * 5);
-    grad.addColorStop(0, `rgba(${{glowR}},${{glowG}},${{glowB}},${{glowAlpha}})`);
-    grad.addColorStop(1, 'transparent');
-    ctx.fillStyle = grad;
-    ctx.beginPath();
-    ctx.arc(px, py, baseSize * 5, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Core dot
-    ctx.fillStyle = `rgba(${{r}},${{g}},${{b}},0.95)`;
-    ctx.beginPath();
-    ctx.arc(px, py, baseSize, 0, Math.PI * 2);
-    ctx.fill();
-  }}
-
-  // ── HUD UPDATE ──
-  const entropyVal = Math.round(lerp(94.7, 1.2, transition) + (Math.random() - 0.5) * 2);
-  const constraintVal = Math.round(lerp(3.1, 98.9, transition) + (Math.random() - 0.5) * 0.5);
-  entEl.textContent = entropyVal + '%';
-  conEl.textContent = constraintVal + '%';
-  modeEl.textContent = transition > 0.5 ? 'CONSTRAINED' : 'CHAOTIC';
-  entEl.style.color = transition > 0.5 ? '#00f3ff' : '#ff003c';
-  modeEl.style.color = transition > 0.5 ? '#00f3ff' : '#ff004c';
-
-  // ── STATUS TAG ──
-  if (transition > 0.92) {{
-    statusTag.textContent = '◈  BELHADJ CONSTRAINT ACTIVE — PIPELINE LOCKED  ◈';
-    statusTag.style.color = '#00f3ff';
-    statusTag.style.borderColor = '#00f3ff44';
-    statusTag.style.background = 'rgba(0,243,255,0.06)';
-    statusTag.style.textShadow = '0 0 12px #00f3ffaa';
-  }} else if (transition > 0.1) {{
-    statusTag.textContent = '⚡  TRANSITIONING STATE-SPACE...  ⚡';
-    statusTag.style.color = '#ffaa00';
-    statusTag.style.borderColor = '#ffaa0044';
-    statusTag.style.background = 'rgba(255,170,0,0.04)';
-    statusTag.style.textShadow = '0 0 10px #ffaa0088';
-  }} else {{
-    statusTag.textContent = '⚠  ENTROPY LEAK DETECTED — MEMORY SPILLAGE CRITICAL  ⚠';
-    statusTag.style.color = '#ff003c';
-    statusTag.style.borderColor = '#ff003c44';
-    statusTag.style.background = 'rgba(255,0,60,0.06)';
-    statusTag.style.textShadow = '0 0 12px #ff003caa';
-  }}
-
-  requestAnimationFrame(draw);
-}}
-
-requestAnimationFrame(draw);
+animate();
 </script>
 </body>
 </html>
-"""
-
-# ── RENDER SIMULATION ──
-st.markdown("""
-<div style="
-    border:1px solid #00f3ff22;
-    border-radius:3px;
-    overflow:hidden;
-    box-shadow:
-        0 0 40px #00f3ff0a,
-        inset 0 0 80px #050505;
-    position:relative;
-">
-""", unsafe_allow_html=True)
-
-components.html(SIMULATION_HTML, height=580, scrolling=False)
-
-st.markdown("</div>", unsafe_allow_html=True)
-
-st.markdown("<div style='height:1rem;'></div>", unsafe_allow_html=True)
-
-# ─────────────────────────────────────────────
-#  BOTTOM METRICS
-# ─────────────────────────────────────────────
-st.markdown("""
-<div style="
-    font-family:'Share Tech Mono',monospace;
-    font-size:0.6rem;
-    color:#00f3ff55;
-    letter-spacing:0.2em;
-    text-align:center;
-    margin-bottom:0.8rem;
-">▼  LIVE TELEMETRY READOUT  ▼</div>
-""", unsafe_allow_html=True)
-
-col1, col2, col3 = st.columns(3)
-
-if algo_active:
-    dram_val = round(np.random.uniform(0.4, 0.9), 2)
-    waste_val = round(np.random.uniform(1.8, 3.9), 1)
-    dram_delta = "▼ -97.3%"
-    waste_delta = "▼ -94.1%"
-    pipeline_label = "OPTIMIZED & LOCKED"
-    pipeline_color = "#00f3ff"
-    pipeline_glow = "#00f3ff88"
-    dram_color = "#00f3ff"
-    waste_color = "#00f3ff"
-else:
-    dram_val = round(np.random.uniform(14.8, 18.4), 2)
-    waste_val = round(np.random.uniform(62.0, 78.5), 1)
-    dram_delta = "▲ CRITICAL"
-    waste_delta = "▲ SEVERE"
-    pipeline_label = "UNCONSTRAINED"
-    pipeline_color = "#ff003c"
-    pipeline_glow = "#ff003c88"
-    dram_color = "#ff4466"
-    waste_color = "#ff3355"
-
-with col1:
-    st.metric(
-        label="DRAM PRESSURE (TB/s)",
-        value=f"{dram_val}",
-        delta=dram_delta,
-        delta_color="normal" if algo_active else "inverse"
-    )
-    st.markdown(f"""
-    <style>
-    [data-testid="stColumns"] > div:nth-child(1) [data-testid="stMetricValue"] {{
-        color: {dram_color} !important;
-        text-shadow: 0 0 20px {dram_color}88;
-    }}
-    </style>
-    """, unsafe_allow_html=True)
-
-with col2:
-    st.metric(
-        label="COMPUTE WASTE (%)",
-        value=f"{waste_val}%",
-        delta=waste_delta,
-        delta_color="normal" if algo_active else "inverse"
-    )
-
-with col3:
-    st.markdown(f"""
-    <div style="
-        background: rgba(0,0,0,0.3);
-        border: 1px solid {pipeline_color}33;
-        border-radius: 2px;
-        padding: 1.2rem 1.5rem;
-        text-align: left;
-        backdrop-filter: blur(8px);
-        height: 100%;
-        min-height: 100px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-    ">
-      <div style="
-          font-family:'Share Tech Mono',monospace;
-          font-size:0.62rem;
-          letter-spacing:0.18em;
-          color:{pipeline_color}99;
-          text-transform:uppercase;
-          margin-bottom:0.5rem;
-      ">PIPELINE STATE</div>
-      <div style="
-          font-family:'Orbitron',sans-serif;
-          font-size:1.25rem;
-          font-weight:700;
-          color:{pipeline_color};
-          text-shadow: 0 0 16px {pipeline_glow}, 0 0 32px {pipeline_color}44;
-          letter-spacing:0.06em;
-          animation: pulseglow 1.4s ease-in-out infinite alternate;
-      ">{pipeline_label}</div>
-      <style>
-        @keyframes pulseglow {{
-          from {{ text-shadow: 0 0 8px {pipeline_glow}; }}
-          to   {{ text-shadow: 0 0 28px {pipeline_glow}, 0 0 50px {pipeline_color}44; }}
-        }}
-      </style>
-    </div>
-    """, unsafe_allow_html=True)
-
-
-# ── FOOTER ──
-st.markdown(f"""
-<div style="
-    margin-top:2rem;
-    height:1px;
-    background:linear-gradient(90deg,transparent,#00f3ff33,transparent);
-"></div>
-<div style="
-    display:flex;justify-content:space-between;
-    font-family:'Share Tech Mono',monospace;
-    font-size:0.55rem;
-    color:#00f3ff28;
-    letter-spacing:0.14em;
-    padding:0.6rem 0 0.3rem;
-">
-  <span>VICS-BELHADJ-AUDIT // TERMINAL BUILD 2080.04.03</span>
-  <span>ALGO: {'ACTIVE — CONSTRAINT ENGAGED' if algo_active else 'STANDBY — ENTROPY MODE'}</span>
-  <span>ANU-CECS // DR. AKRAM RESEARCH NODE</span>
-</div>
-""", unsafe_allow_html=True)
+""", height=1080, scrolling=False)
