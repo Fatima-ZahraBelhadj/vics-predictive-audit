@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fatima Z. Belhadj — Holographic Portfolio & Fluid Memory Simulation</title>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     CDN DEPENDENCIES
+     ═══════════════════════════════════════════════════════════════ -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     TYPOGRAPHY — Distinctive, non-generic font pairing
+     ═══════════════════════════════════════════════════════════════ -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700&family=Space+Mono:wght@400;700&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   CSS VARIABLES & RESET
+   ═══════════════════════════════════════════════════════════════ */
+:root {
+  --pearl: #f0eef6;
+  --cyan-glow: #00e5ff;
+  --peach-glow: #ffab91;
+  --magenta-glow: #e040fb;
+  --white-glass: rgba(255, 255, 255, 0.12);
+  --white-glass-strong: rgba(255, 255, 255, 0.22);
+  --border-glow: rgba(0, 229, 255, 0.35);
+  --text-dark: #1a1a2e;
+  --text-mid: #3a3a5c;
+  --font-display: 'Syne', sans-serif;
+  --font-body: 'Outfit', sans-serif;
+  --font-mono: 'Space Mono', monospace;
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  font-family: var(--font-body);
+  color: var(--text-dark);
+  cursor: crosshair;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   THREE.JS CANVAS
+   ═══════════════════════════════════════════════════════════════ */
+#three-canvas {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 1;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   GLSL BACKGROUND CANVAS (behind Three.js)
+   ═══════════════════════════════════════════════════════════════ */
+#bg-canvas {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   GLASSMORPHISM UI OVERLAY
+   ═══════════════════════════════════════════════════════════════ */
+.ui-overlay {
+  position: fixed;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.ui-overlay * {
+  pointer-events: auto;
+}
+
+.glass-panel {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--border-glow);
+  border-radius: 16px;
+  box-shadow:
+    0 8px 32px rgba(0, 229, 255, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+/* ── Top-Left: Identity Badge ── */
+#identity-badge {
+  top: 24px; left: 24px;
+  padding: 18px 24px;
+}
+
+#identity-badge h1 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.35rem;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, var(--cyan-glow), var(--magenta-glow));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+#identity-badge .subtitle {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-mid);
+  letter-spacing: 0.08em;
+  margin-top: 4px;
+  text-transform: uppercase;
+}
+
+/* ── Top-Right: Lab Target ── */
+#lab-target {
+  top: 24px; right: 24px;
+  padding: 14px 20px;
+  text-align: right;
+}
+
+#lab-target .lab-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--text-dark);
+}
+
+#lab-target .advisor {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--text-mid);
+  letter-spacing: 0.06em;
+  margin-top: 2px;
+}
+
+/* ── Bottom-Left: Academic Pitch ── */
+#academic-pitch {
+  bottom: 24px; left: 24px;
+  max-width: 420px;
+  padding: 22px 26px;
+}
+
+#academic-pitch .pitch-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--text-dark);
+  margin-bottom: 10px;
+  line-height: 1.3;
+}
+
+#academic-pitch .pitch-body {
+  font-family: var(--font-body);
+  font-weight: 300;
+  font-size: 0.75rem;
+  color: var(--text-mid);
+  line-height: 1.7;
+}
+
+#academic-pitch .pitch-body strong {
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+/* ── Bottom-Right: Simulation Control ── */
+#sim-control {
+  bottom: 24px; right: 24px;
+  padding: 18px 24px;
+  text-align: center;
+}
+
+#sim-control .sim-label {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--text-mid);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+#sim-btn {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  padding: 12px 22px;
+  border: 1px solid var(--cyan-glow);
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(0,229,255,0.15), rgba(224,64,251,0.10));
+  color: var(--text-dark);
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  text-transform: uppercase;
+  position: relative;
+  overflow: hidden;
+}
+
+#sim-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--cyan-glow), var(--magenta-glow));
+  opacity: 0;
+  transition: opacity 0.4s;
+  z-index: -1;
+  border-radius: 8px;
+}
+
+#sim-btn:hover {
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 0 30px rgba(0, 229, 255, 0.4);
+  transform: scale(1.05);
+}
+
+#sim-btn:hover::after { opacity: 1; }
+
+#sim-state {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  color: var(--magenta-glow);
+  margin-top: 8px;
+  letter-spacing: 0.05em;
+  min-height: 1em;
+}
+
+/* ── Center: Formula Overlay ── */
+#formula-overlay {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 16px 28px;
+  opacity: 0;
+  transition: opacity 0.8s;
+  pointer-events: none !important;
+  text-align: center;
+}
+
+#formula-overlay.visible { opacity: 1; }
+
+#formula-overlay .formula {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-dark);
+  letter-spacing: 0.02em;
+  line-height: 1.8;
+}
+
+/* ── Navigation Hint ── */
+#nav-hint {
+  top: 50%;
+  right: 24px;
+  transform: translateY(-50%);
+  padding: 12px 16px;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+
+#nav-hint span {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  color: var(--text-mid);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+/* ── Loading Screen ── */
+#loading-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: linear-gradient(135deg, #f0eef6, #e8f5f7, #fce4ec);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#loading-screen.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.loader-ring {
+  width: 60px; height: 60px;
+  border: 2px solid rgba(0, 229, 255, 0.2);
+  border-top-color: var(--cyan-glow);
+  border-right-color: var(--magenta-glow);
+  border-radius: 50%;
+  animation: spin 1.2s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.loader-text {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: 0.8rem;
+  color: var(--text-mid);
+  margin-top: 20px;
+  letter-spacing: 0.1em;
+}
+
+/* ── Tooltip ── */
+#tooltip {
+  position: fixed;
+  z-index: 20;
+  padding: 8px 14px;
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-glow);
+  border-radius: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--text-dark);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.3s, transform 0.3s;
+  max-width: 220px;
+  line-height: 1.5;
+}
+
+#tooltip.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  #academic-pitch { max-width: 260px; padding: 14px 16px; }
+  #academic-pitch .pitch-body { font-size: 0.65rem; }
+  #identity-badge h1 { font-size: 1rem; }
+  #nav-hint { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     LOADING SCREEN
+     ═══════════════════════════════════════════════════════════════ -->
+<div id="loading-screen">
+  <div class="loader-ring"></div>
+  <div class="loader-text">Initializing Holographic Environment...</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     GLSL BACKGROUND CANVAS
+     ═══════════════════════════════════════════════════════════════ -->
+<canvas id="bg-canvas"></canvas>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     THREE.JS CANVAS
+     ═══════════════════════════════════════════════════════════════ -->
+<canvas id="three-canvas"></canvas>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     HTML UI OVERLAYS
+     ═══════════════════════════════════════════════════════════════ -->
+
+<!-- Identity Badge -->
+<div id="identity-badge" class="ui-overlay glass-panel">
+  <h1>Fatima Z. Belhadj</h1>
+  <div class="subtitle">Systems Engineer · Data Architect · Researcher</div>
+</div>
+
+<!-- Lab Target -->
+<div id="lab-target" class="ui-overlay glass-panel">
+  <div class="lab-name">ANU VICS Lab</div>
+  <div class="advisor">Dr. Shoaib Akram · Hybrid-NVM Architectures</div>
+</div>
+
+<!-- Academic Pitch -->
+<div id="academic-pitch" class="ui-overlay glass-panel">
+  <div class="pitch-title">Bridging Systems Engineering with Computer Science</div>
+  <div class="pitch-body">
+    <strong>Dr. Akram:</strong> Hardware latency is a fluid dynamics problem.
+    This environment simulates my <strong>decision-aid optimization</strong> routing
+    GenAI tokens through your <strong>Hybrid-NVM architectures</strong>. My Systems
+    Engineering background gives me a unique lens — treating memory hierarchies
+    as flow networks where multi-criteria optimization determines optimal
+    data placement across DRAM and NVM tiers.
+  </div>
+</div>
+
+<!-- Simulation Control -->
+<div id="sim-control" class="ui-overlay glass-panel">
+  <div class="sim-label">Fluid Memory Simulation</div>
+  <button id="sim-btn">▶ Initiate Fluid Decision-Aid Routing</button>
+  <div id="sim-state"></div>
+</div>
+
+<!-- Formula Overlay -->
+<div id="formula-overlay" class="ui-overlay glass-panel">
+  <div class="formula">
+    min Σ (ωₗ·Latency(pᵢ) + ω_e·Energy(pᵢ) + ω_w·Wear(pᵢ))<br>
+    s.t. Cap_DRAM + Cap_NVM ≥ WorkingSet(GenAI)<br>
+    ∀ pᵢ ∈ {DRAM, NVM} | Belhadj Decision-Aid
+  </div>
+</div>
+
+<!-- Nav Hint -->
+<div id="nav-hint" class="ui-overlay glass-panel">
+  <span>← Move Mouse to Explore →</span>
+</div>
+
+<!-- Tooltip -->
+<div id="tooltip"></div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     GLSL BACKGROUND SHADER — Iridescent Fluid Gradient
+     ═══════════════════════════════════════════════════════════════ -->
+<script id="bg-vert" type="x-shader/x-vertex">
+  attribute vec2 position;
+  void main() {
+    gl_Position = vec4(position, 0.0, 1.0);
+  }
+</script>
+
+<script id="bg-frag" type="x-shader/x-fragment">
+  precision highp float;
+  uniform float uTime;
+  uniform vec2 uResolution;
+
+  // Simplex-style noise for fluid motion
+  vec3 mod289(vec3 x) { return x - floor(x * (1.0/289.0)) * 289.0; }
+  vec2 mod289(vec2 x) { return x - floor(x * (1.0/289.0)) * 289.0; }
+  vec3 permute(vec3 x) { return mod289(((x*34.0)+1.0)*x); }
+
+  float snoise(vec2 v) {
+    const vec4 C = vec4(0.211324865405187, 0.366025403784439,
+                       -0.577350269189626, 0.024390243902439);
+    vec2 i = floor(v + dot(v, C.yy));
+    vec2 x0 = v - i + dot(i, C.xx);
+    vec2 i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+    vec4 x12 = x0.xyxy + C.xxzz;
+    x12.xy -= i1;
+    i = mod289(i);
+    vec3 p = permute(permute(i.y + vec3(0.0, i1.y, 1.0)) + i.x + vec3(0.0, i1.x, 1.0));
+    vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy), dot(x12.zw,x12.zw)), 0.0);
+    m = m*m; m = m*m;
+    vec3 x_ = 2.0 * fract(p * C.www) - 1.0;
+    vec3 h = abs(x_) - 0.5;
+    vec3 ox = floor(x_ + 0.5);
+    vec3 a0 = x_ - ox;
+    m *= 1.79284291400159 - 0.85373472095314 * (a0*a0 + h*h);
+    vec3 g;
+    g.x = a0.x * x0.x + h.x * x0.y;
+    g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+    return 130.0 * dot(m, g);
+  }
+
+  void main() {
+    vec2 uv = gl_FragCoord.xy / uResolution;
+    float t = uTime * 0.12;
+
+    // Multiple noise layers for fluid iridescence
+    float n1 = snoise(uv * 2.0 + vec2(t * 0.7, t * 0.5));
+    float n2 = snoise(uv * 3.5 + vec2(-t * 0.4, t * 0.8));
+    float n3 = snoise(uv * 1.5 + vec2(t * 0.3, -t * 0.6));
+
+    // Bright, sunlit color palette — NO dark colors
+    vec3 pearl    = vec3(0.95, 0.93, 0.97);   // soft pearl white
+    vec3 cyan     = vec3(0.75, 0.97, 1.00);   // liquid cyan
+    vec3 peach    = vec3(1.00, 0.85, 0.78);   // glowing peach
+    vec3 magenta  = vec3(0.96, 0.82, 0.95);   // holographic magenta
+    vec3 lilac    = vec3(0.88, 0.85, 0.98);   // soft lilac
+
+    // Blend with noise
+    vec3 col = pearl;
+    col = mix(col, cyan,    smoothstep(-0.3, 0.5, n1));
+    col = mix(col, peach,   smoothstep(-0.2, 0.6, n2) * 0.6);
+    col = mix(col, magenta, smoothstep(0.0, 0.7, n3) * 0.45);
+    col = mix(col, lilac,   smoothstep(-0.4, 0.3, n1 + n2) * 0.3);
+
+    // Subtle iridescent shimmer
+    float shimmer = snoise(uv * 8.0 + t * 2.0) * 0.03;
+    col += shimmer;
+
+    // Keep everything bright — clamp to bright range
+    col = clamp(col, 0.72, 1.0);
+
+    gl_FragColor = vec4(col, 1.0);
+  }
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     MAIN APPLICATION SCRIPT
+     ═══════════════════════════════════════════════════════════════ -->
+<script>
+(function() {
+  'use strict';
+
+  /* ───────────────────────────────────────────────────────────────
+     §0. CONFIGURATION & IMAGE PLACEHOLDERS
+     ─────────────────────────────────────────────────────────────── */
+
+  // ╔═══════════════════════════════════════════════════════════════╗
+  // ║  IMAGE TEXTURE PLACEHOLDERS                                   ║
+  // ║  Replace these URLs with your actual image URLs.              ║
+  // ║  Each entry creates a floating "Glass Monolith" in the 3D     ║
+  // ║  gallery. Add as many as you like by appending to the array.  ║
+  // ╚═══════════════════════════════════════════════════════════════╝
+
+  const GALLERY_ITEMS = [
+    {
+      // ── Hero Picture: Fatima's professional photo ──
+      imageUrl: '[HERO_PICTURE_URL]',
+      title: 'Fatima Z. Belhadj',
+      description: 'Systems Engineer\nData Architect',
+      position: { x: -6, y: 1.5, z: -3 },
+      scale: 1.4
+    },
+    {
+      // ── Certificate: University Honors Program ──
+      imageUrl: '[CERT_UHP_URL]',
+      title: 'University Honors Program',
+      description: 'Summa Cum Laude\nDistinguished Scholar',
+      position: { x: -3, y: 0.5, z: -6 },
+      scale: 1.0
+    },
+    {
+      // ── Certificate: Rank 1 BSEMS ──
+      imageUrl: '[CERT_RANK1_URL]',
+      title: 'Rank 1 BSEMS',
+      description: 'Summa Cum Laude\nFirst in Class',
+      position: { x: 0, y: 2.0, z: -7 },
+      scale: 1.1
+    },
+    {
+      // ── Certificate: Upwork Top Rated ──
+      imageUrl: '[CERT_UPWORK_URL]',
+      title: 'Top 3% Global',
+      description: 'Data Architect\nUpwork Elite',
+      position: { x: 3, y: 0.8, z: -5 },
+      scale: 1.0
+    },
+    {
+      // ── Award: Stonehenge ──
+      imageUrl: '[AWARD_STONEHENGE_URL]',
+      title: 'Stonehenge Award',
+      description: 'Research Excellence\nInternational Recognition',
+      position: { x: 5.5, y: 1.8, z: -4 },
+      scale: 1.05
+    },
+    {
+      // ── Award: PGS ──
+      imageUrl: '[AWARD_PGS_URL]',
+      title: 'PGS Achievement',
+      description: 'Postgraduate Studies\nDistinction Award',
+      position: { x: 7, y: 0.3, z: -6.5 },
+      scale: 1.0
+    }
+    // ╔═══════════════════════════════════════════════════════════╗
+    // ║  ADD MORE ITEMS HERE:                                      ║
+    // ║  {                                                         ║
+    // ║    imageUrl: '[YOUR_IMAGE_URL]',                            ║
+    // ║    title: 'Achievement Title',                              ║
+    // ║    description: 'Line 1\nLine 2',                           ║
+    // ║    position: { x: N, y: N, z: N },                         ║
+    // ║    scale: 1.0                                               ║
+    // ║  }                                                         ║
+    // ╚═══════════════════════════════════════════════════════════╝
+  ];
+
+
+  /* ───────────────────────────────────────────────────────────────
+     §1. GLSL BACKGROUND SHADER INITIALIZATION
+     ─────────────────────────────────────────────────────────────── */
+  const bgCanvas = document.getElementById('bg-canvas');
+  const gl = bgCanvas.getContext('webgl') || bgCanvas.getContext('experimental-webgl');
+
+  function resizeBg() {
+    bgCanvas.width = window.innerWidth;
+    bgCanvas.height = window.innerHeight;
+    if (gl) gl.viewport(0, 0, bgCanvas.width, bgCanvas.height);
+  }
+  resizeBg();
+  window.addEventListener('resize', resizeBg);
+
+  let bgProgram = null;
+  let bgTimeUniform = null;
+  let bgResUniform = null;
+
+  if (gl) {
+    function compileShader(src, type) {
+      const s = gl.createShader(type);
+      gl.shaderSource(s, src);
+      gl.compileShader(s);
+      return s;
+    }
+
+    const vSrc = document.getElementById('bg-vert').textContent;
+    const fSrc = document.getElementById('bg-frag').textContent;
+
+    const vs = compileShader(vSrc, gl.VERTEX_SHADER);
+    const fs = compileShader(fSrc, gl.FRAGMENT_SHADER);
+
+    bgProgram = gl.createProgram();
+    gl.attachShader(bgProgram, vs);
+    gl.attachShader(bgProgram, fs);
+    gl.linkProgram(bgProgram);
+    gl.useProgram(bgProgram);
+
+    const verts = new Float32Array([-1,-1, 1,-1, -1,1, 1,1]);
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, verts, gl.STATIC_DRAW);
+
+    const posAttr = gl.getAttribLocation(bgProgram, 'position');
+    gl.enableVertexAttribArray(posAttr);
+    gl.vertexAttribPointer(posAttr, 2, gl.FLOAT, false, 0, 0);
+
+    bgTimeUniform = gl.getUniformLocation(bgProgram, 'uTime');
+    bgResUniform = gl.getUniformLocation(bgProgram, 'uResolution');
+  }
+
+
+  /* ───────────────────────────────────────────────────────────────
+     §2. WEB AUDIO API — Hover chime / glass sound
+     ─────────────────────────────────────────────────────────────── */
+  let audioCtx = null;
+
+  function initAudio() {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+  }
+
+  function playChime(frequency = 880, duration = 0.25) {
+    if (!audioCtx) return;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    const filter = audioCtx.createBiquadFilter();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(frequency * 1.5, audioCtx.currentTime + duration * 0.3);
+
+    filter.type = 'highpass';
+    filter.frequency.value = 400;
+
+    gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + duration);
+  }
+
+  function playGlassSound() {
+    if (!audioCtx) return;
+    // Layered glass resonance
+    [1200, 1800, 2400].forEach((f, i) => {
+      setTimeout(() => playChime(f, 0.35), i * 40);
+    });
+  }
+
+  // Init audio on first interaction
+  document.addEventListener('click', initAudio, { once: true });
+  document.addEventListener('mousemove', initAudio, { once: true });
+
+
+  /* ───────────────────────────────────────────────────────────────
+     §3. THREE.JS SCENE SETUP
+     ─────────────────────────────────────────────────────────────── */
+  const canvas3D = document.getElementById('three-canvas');
+  const renderer = new THREE.WebGLRenderer({
+    canvas: canvas3D,
+    alpha: true,
+    antialias: true
+  });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.2;
+
+  const scene = new THREE.Scene();
+
+  // Camera
+  const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+  camera.position.set(0, 1, 8);
+
+  // ── Lighting: Bright holograms ──
+  const hemiLight = new THREE.HemisphereLight(0xe8f5f7, 0xfce4ec, 1.0);
+  scene.add(hemiLight);
+
+  const pointLight1 = new THREE.PointLight(0x00e5ff, 2.0, 30);
+  pointLight1.position.set(5, 5, 5);
+  scene.add(pointLight1);
+
+  const pointLight2 = new THREE.PointLight(0xe040fb, 1.5, 30);
+  pointLight2.position.set(-5, 3, -5);
+  scene.add(pointLight2);
+
+  const pointLight3 = new THREE.PointLight(0xffab91, 1.2, 25);
+  pointLight3.position.set(0, -2, 8);
+  scene.add(pointLight3);
+
+  // Ambient
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+  scene.add(ambientLight);
+
+
+  /* ───────────────────────────────────────────────────────────────
+     §4. MOUSE & CAMERA TRACKING
+     ─────────────────────────────────────────────────────────────── */
+  const mouse = { x: 0, y: 0, targetX: 0, targetY: 0 };
+  const raycaster = new THREE.Raycaster();
+  const mouseVec = new THREE.Vector2();
+
+  document.addEventListener('mousemove', (e) => {
+    mouse.targetX = (e.clientX / window.innerWidth) * 2 - 1;
+    mouse.targetY = -(e.clientY / window.innerHeight) * 2 + 1;
+    mouseVec.x = mouse.targetX;
+    mouseVec.y = mouse.targetY;
+  });
+
+  // Scroll-based camera depth
+  let scrollZ = 0;
+  let targetScrollZ = 0;
+  document.addEventListener('wheel', (e) => {
+    targetScrollZ += e.deltaY * 0.005;
+    targetScrollZ = Math.max(-8, Math.min(8, targetScrollZ));
+  });
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    resizeBg();
+  });
+
+
+  /* ───────────────────────────────────────────────────────────────
+     §5. FLOATING DATA NODES — Ambient interactive geometry
+     ─────────────────────────────────────────────────────────────── */
+  const dataNodes = [];
+  const nodeGeometries = [
+    new THREE.OctahedronGeometry(0.15, 0),
+    new THREE.SphereGeometry(0.12, 8, 6),
+    new THREE.TetrahedronGeometry(0.13, 0),
+    new THREE.IcosahedronGeometry(0.11, 0)
+  ];
+
+  const nodeColors = [0x00e5ff, 0xe040fb, 0xffab91, 0xa5d6f7, 0xf8bbd0];
+
+  for (let i = 0; i < 80; i++) {
+    const geom = nodeGeometries[Math.floor(Math.random() * nodeGeometries.length)];
+    const color = nodeColors[Math.floor(Math.random() * nodeColors.length)];
+
+    const mat = new THREE.MeshPhongMaterial({
+      color: color,
+      transparent: true,
+      opacity: 0.35 + Math.random() * 0.25,
+      shininess: 100,
+      emissive: color,
+      emissiveIntensity: 0.15
+    });
+
+    const mesh = new THREE.Mesh(geom, mat);
+
+    // Spread nodes in a wide volume
+    mesh.position.set(
+      (Math.random() - 0.5) * 24,
+      (Math.random() - 0.5) * 12,
+      (Math.random() - 0.5) * 20 - 4
+    );
+
+    mesh.userData = {
+      basePos: mesh.position.clone(),
+      speed: 0.2 + Math.random() * 0.6,
+      offset: Math.random() * Math.PI * 2,
+      rotSpeed: (Math.random() - 0.5) * 0.02
+    };
+
+    scene.add(mesh);
+    dataNodes.push(mesh);
+  }
+
+
+  /* ───────────────────────────────────────────────────────────────
+     §6. HOLOGRAPHIC GALLERY — Glass Monoliths
+     ─────────────────────────────────────────────────────────────── */
+  const monoliths = [];
+  const monolithGroup = new THREE.Group();
+  scene.add(monolithGroup);
+
+  // Create a placeholder texture (frosted glass look)
+  function createPlaceholderTexture(title, desc) {
+    const c = document.createElement('canvas');
+    c.width = 512; c.height = 640;
+    const ctx = c.getContext('2d');
+
+    // Frosted glass gradient
+    const grad = ctx.createLinearGradient(0, 0, 512, 640);
+    grad.addColorStop(0, 'rgba(240, 238, 246, 0.9)');
+    grad.addColorStop(0.5, 'rgba(200, 240, 255, 0.85)');
+    grad.addColorStop(1, 'rgba(248, 187, 208, 0.8)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 512, 640);
+
+    // Border glow
+    ctx.strokeStyle = 'rgba(0, 229, 255, 0.6)';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(8, 8, 496, 624);
+
+    // Placeholder icon
+    ctx.fillStyle = 'rgba(0, 229, 255, 0.25)';
+    ctx.beginPath();
+    ctx.arc(256, 250, 80, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Cross lines to indicate placeholder
+    ctx.strokeStyle = 'rgba(0, 229, 255, 0.3)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(20, 20); ctx.lineTo(492, 620);
+    ctx.moveTo(492, 20); ctx.lineTo(20, 620);
+    ctx.stroke();
+
+    // Title
+    ctx.fillStyle = '#1a1a2e';
+    ctx.font = 'bold 28px "Segoe UI", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(title, 256, 430);
+
+    // Description lines
+    ctx.font = '18px "Segoe UI", sans-serif';
+    ctx.fillStyle = '#3a3a5c';
+    const lines = desc.split('\n');
+    lines.forEach((line, i) => {
+      ctx.fillText(line, 256, 470 + i * 26);
+    });
+
+    // "Replace URL" hint
+    ctx.font = '12px monospace';
+    ctx.fillStyle = 'rgba(224, 64, 251, 0.5)';
+    ctx.fillText('Replace image URL in code', 256, 600);
+
+    const tex = new THREE.CanvasTexture(c);
+    tex.needsUpdate = true;
+    return tex;
+  }
+
+  GALLERY_ITEMS.forEach((item, idx) => {
+    // Main plane (glass monolith)
+    const planeGeom = new THREE.PlaneGeometry(2.0 * item.scale, 2.5 * item.scale);
+
+    const tex = createPlaceholderTexture(item.title, item.description);
+
+    const planeMat = new THREE.MeshPhysicalMaterial({
+      map: tex,
+      transparent: true,
+      opacity: 0.85,
+      roughness: 0.1,
+      metalness: 0.05,
+      clearcoat: 1.0,
+      clearcoatRoughness: 0.1,
+      side: THREE.DoubleSide,
+      emissive: 0x00e5ff,
+      emissiveIntensity: 0.03
+    });
+
+    const plane = new THREE.Mesh(planeGeom, planeMat);
+    plane.position.set(item.position.x, item.position.y, item.position.z);
+
+    // Slight random rotation for visual interest
+    plane.rotation.y = (Math.random() - 0.5) * 0.3;
+
+    plane.userData = {
+      type: 'monolith',
+      title: item.title,
+      description: item.description,
+      baseScale: item.scale,
+      isHovered: false,
+      baseEmissive: 0.03,
+      idx: idx
+    };
+
+    monolithGroup.add(plane);
+    monoliths.push(plane);
+
+    // Glow border frame
+    const frameGeom = new THREE.EdgesGeometry(planeGeom);
+    const frameMat = new THREE.LineBasicMaterial({
+      color: 0x00e5ff,
+      transparent: true,
+      opacity: 0.5
+    });
+    const frame = new THREE.LineSegments(frameGeom, frameMat);
+    frame.position.copy(plane.position);
+    frame.rotation.copy(plane.rotation);
+    monolithGroup.add(frame);
+
+    // Floating label (3D text via sprite)
+    const labelCanvas = document.createElement('canvas');
+    labelCanvas.width = 512;
+    labelCanvas.height = 128;
+    const lCtx = labelCanvas.getContext('2d');
+    lCtx.clearRect(0, 0, 512, 128);
+    lCtx.fillStyle = '#1a1a2e';
+    lCtx.font = 'bold 32px "Segoe UI", sans-serif';
+    lCtx.textAlign = 'left';
+    lCtx.fillText(item.title, 20, 45);
+    lCtx.font = '22px "Segoe UI", sans-serif';
+    lCtx.fillStyle = '#3a3a5c';
+    const descLines = item.description.split('\n');
+    descLines.forEach((l, i) => lCtx.fillText(l, 20, 80 + i * 28));
+
+    const labelTex = new THREE.CanvasTexture(labelCanvas);
+    const spriteMat = new THREE.SpriteMaterial({ map: labelTex, transparent: true, opacity: 0.9 });
+    const sprite = new THREE.Sprite(spriteMat);
+    sprite.position.set(
+      item.position.x + 1.4 * item.scale,
+      item.position.y + 0.8,
+      item.position.z + 0.1
+    );
+    sprite.scale.set(3, 0.75, 1);
+    monolithGroup.add(sprite);
+  });
+
+
+  /* ───────────────────────────────────────────────────────────────
+     §7. FLUID MEMORY SIMULATION — Particle System
+     ─────────────────────────────────────────────────────────────── */
+  const PARTICLE_COUNT = 600;
+  const particleGeom = new THREE.BufferGeometry();
+  const positions = new Float32Array(PARTICLE_COUNT * 3);
+  const colors = new Float32Array(PARTICLE_COUNT * 3);
+  const particleData = [];
+
+  // Initialize particles in chaotic cluster (State 1: DRAM bottleneck)
+  for (let i = 0; i < PARTICLE_COUNT; i++) {
+    const i3 = i * 3;
+    positions[i3]     = (Math.random() - 0.5) * 3;
+    positions[i3 + 1] = (Math.random() - 0.5) * 3;
+    positions[i3 + 2] = (Math.random() - 0.5) * 3 - 12;
+
+    // Bright neon orange for bottleneck state
+    colors[i3]     = 1.0;
+    colors[i3 + 1] = 0.45;
+    colors[i3 + 2] = 0.1;
+
+    particleData.push({
+      baseX: positions[i3],
+      baseY: positions[i3 + 1],
+      baseZ: positions[i3 + 2],
+      speed: 0.5 + Math.random() * 1.5,
+      offset: Math.random() * Math.PI * 2,
+      stream: i < PARTICLE_COUNT / 2 ? 'dram' : 'nvm' // Pre-assign streams
+    });
+  }
+
+  particleGeom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  particleGeom.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+  // Custom particle material with glow
+  const particleMat = new THREE.PointsMaterial({
+    size: 0.08,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.85,
+    blending: THREE.AdditiveBlending,
+    sizeAttenuation: true
+  });
+
+  const particleSystem = new THREE.Points(particleGeom, particleMat);
+  particleSystem.position.set(0, 0, -12);
+  scene.add(particleSystem);
+
+  // Simulation state
+  let simState = 'bottleneck'; // 'bottleneck' | 'optimized'
+  let simTransition = 0; // 0 = bottleneck, 1 = optimized
+
+  // Button handler
+  document.getElementById('sim-btn').addEventListener('click', () => {
+    initAudio();
+    if (simState === 'bottleneck') {
+      simState = 'optimized';
+      document.getElementById('sim-state').textContent = 'ROUTING ACTIVE — Dual-Helix NVM/DRAM Streams';
+      document.getElementById('sim-btn').textContent = '■ Reset to Bottleneck State';
+      document.getElementById('formula-overlay').classList.add('visible');
+      gsap.to({ v: simTransition }, {
+        v: 1, duration: 2.5,
+        ease: 'power3.inOut',
+        onUpdate: function() { simTransition = this.targets()[0].v; }
+      });
+      // Glass sound for routing activation
+      playGlassSound();
+    } else {
+      simState = 'bottleneck';
+      document.getElementById('sim-state').textContent = '';
+      document.getElementById('sim-btn').textContent = '▶ Initiate Fluid Decision-Aid Routing';
+      document.getElementById('formula-overlay').classList.remove('visible');
+      gsap.to({ v: simTransition }, {
+        v: 0, duration: 2.0,
+        ease: 'power2.inOut',
+        onUpdate: function() { simTransition = this.targets()[0].v; }
+      });
+    }
+  });
+
+
+  /* ───────────────────────────────────────────────────────────────
+     §8. TOOLTIP & HOVER SYSTEM
+     ─────────────────────────────────────────────────────────────── */
+  const tooltip = document.getElementById('tooltip');
+  let hoveredMonolith = null;
+
+  function updateHover(e) {
+    raycaster.setFromCamera(mouseVec, camera);
+    const intersects = raycaster.intersectObjects(monoliths);
+
+    if (intersects.length > 0) {
+      const obj = intersects[0].object;
+      if (obj.userData.type === 'monolith') {
+        if (hoveredMonolith !== obj) {
+          // New hover
+          if (hoveredMonolith) unhoverMonolith(hoveredMonolith);
+          hoveredMonolith = obj;
+          hoverMonolith(obj);
+          playChime(660 + obj.userData.idx * 80);
+        }
+        // Position tooltip
+        tooltip.style.left = (e.clientX + 16) + 'px';
+        tooltip.style.top = (e.clientY - 10) + 'px';
+        tooltip.textContent = obj.userData.title + ' — ' + obj.userData.description.replace(/\n/g, ' · ');
+        tooltip.classList.add('visible');
+      }
+    } else {
+      if (hoveredMonolith) {
+        unhoverMonolith(hoveredMonolith);
+        hoveredMonolith = null;
+      }
+      tooltip.classList.remove('visible');
+    }
+  }
+
+  function hoverMonolith(obj) {
+    obj.userData.isHovered = true;
+    gsap.to(obj.scale, { x: 1.15, y: 1.15, z: 1.15, duration: 0.5, ease: 'back.out(1.7)' });
+    gsap.to(obj.material, { emissiveIntensity: 0.2, opacity: 1.0, duration: 0.4 });
+  }
+
+  function unhoverMonolith(obj) {
+    obj.userData.isHovered = false;
+    gsap.to(obj.scale, { x: 1, y: 1, z: 1, duration: 0.5, ease: 'power2.out' });
+    gsap.to(obj.material, { emissiveIntensity: 0.03, opacity: 0.85, duration: 0.4 });
+  }
+
+  document.addEventListener('mousemove', updateHover);
+
+
+  /* ───────────────────────────────────────────────────────────────
+     §9. ANIMATION LOOP
+     ─────────────────────────────────────────────────────────────── */
+  const clock = new THREE.Clock();
+
+  function animate() {
+    requestAnimationFrame(animate);
+    const t = clock.getElapsedTime();
+    const dt = clock.getDelta();
+
+    // ── Background shader ──
+    if (gl && bgProgram) {
+      gl.useProgram(bgProgram);
+      gl.uniform1f(bgTimeUniform, t);
+      gl.uniform2f(bgResUniform, bgCanvas.width, bgCanvas.height);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    }
+
+    // ── Smooth mouse following ──
+    mouse.x += (mouse.targetX - mouse.x) * 0.04;
+    mouse.y += (mouse.targetY - mouse.y) * 0.04;
+    scrollZ += (targetScrollZ - scrollZ) * 0.05;
+
+    // ── Camera: gamified smooth swimming ──
+    camera.position.x += (mouse.x * 4 - camera.position.x) * 0.025;
+    camera.position.y += (mouse.y * 2 + 1 - camera.position.y) * 0.025;
+    camera.position.z = 8 - scrollZ;
+
+    // Gentle look-at with mouse influence
+    camera.lookAt(
+      mouse.x * 1.5,
+      mouse.y * 0.8,
+      -4
+    );
+
+    // ── Animate floating data nodes ──
+    dataNodes.forEach((node) => {
+      const d = node.userData;
+      const baseP = d.basePos;
+
+      // Gentle floating motion
+      node.position.x = baseP.x + Math.sin(t * d.speed + d.offset) * 0.5;
+      node.position.y = baseP.y + Math.cos(t * d.speed * 0.7 + d.offset) * 0.4;
+      node.position.z = baseP.z + Math.sin(t * d.speed * 0.5 + d.offset * 2) * 0.3;
+
+      // Rotate
+      node.rotation.x += d.rotSpeed;
+      node.rotation.y += d.rotSpeed * 0.7;
+
+      // Mouse repulsion — push away smoothly
+      const dx = node.position.x - camera.position.x - mouse.x * 3;
+      const dy = node.position.y - camera.position.y - mouse.y * 2;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < 3.0) {
+        const force = (3.0 - dist) * 0.008;
+        node.position.x += dx * force;
+        node.position.y += dy * force;
+      }
+    });
+
+    // ── Animate glass monoliths (gentle bob) ──
+    monoliths.forEach((m, i) => {
+      if (!m.userData.isHovered) {
+        m.position.y += Math.sin(t * 0.5 + i) * 0.001;
+      }
+    });
+
+    // ── Animate particles (Fluid Memory Simulation) ──
+    const posArr = particleGeom.attributes.position.array;
+    const colArr = particleGeom.attributes.color.array;
+    const centerZ = -12;
+
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      const i3 = i * 3;
+      const pd = particleData[i];
+      const angle = t * pd.speed + pd.offset;
+
+      if (simTransition < 0.01) {
+        // ── STATE 1: Chaotic bottleneck ──
+        posArr[i3]     = pd.baseX + Math.sin(angle * 1.3) * 1.5;
+        posArr[i3 + 1] = pd.baseY + Math.cos(angle * 0.9) * 1.5;
+        posArr[i3 + 2] = pd.baseZ + Math.sin(angle * 1.1) * 1.2;
+
+        // Neon orange
+        colArr[i3]     = 1.0;
+        colArr[i3 + 1] = 0.45 + Math.sin(angle) * 0.1;
+        colArr[i3 + 2] = 0.1;
+
+      } else if (simTransition > 0.99) {
+        // ── STATE 2: Optimized double-helix ──
+        const helixT = t * 0.8 + (i / PARTICLE_COUNT) * Math.PI * 6;
+        const radius = 0.6 + Math.sin(i * 0.1) * 0.2;
+
+        if (pd.stream === 'dram') {
+          // Cyan helix stream
+          posArr[i3]     = Math.cos(helixT) * radius;
+          posArr[i3 + 1] = (i / PARTICLE_COUNT) * 6 - 3 + Math.sin(t * 0.3) * 0.2;
+          posArr[i3 + 2] = centerZ + Math.sin(helixT) * radius;
+
+          colArr[i3]     = 0.0;
+          colArr[i3 + 1] = 0.9;
+          colArr[i3 + 2] = 1.0;
+        } else {
+          // Magenta helix stream
+          posArr[i3]     = Math.cos(helixT + Math.PI) * radius;
+          posArr[i3 + 1] = (i / PARTICLE_COUNT) * 6 - 3 + Math.sin(t * 0.3 + 1) * 0.2;
+          posArr[i3 + 2] = centerZ + Math.sin(helixT + Math.PI) * radius;
+
+          colArr[i3]     = 0.88;
+          colArr[i3 + 1] = 0.25;
+          colArr[i3 + 2] = 0.98;
+        }
+
+      } else {
+        // ── TRANSITION: Lerp between states ──
+        const s = simTransition;
+
+        // Chaotic position
+        const cx = pd.baseX + Math.sin(angle * 1.3) * 1.5;
+        const cy = pd.baseY + Math.cos(angle * 0.9) * 1.5;
+        const cz = pd.baseZ + Math.sin(angle * 1.1) * 1.2;
+
+        // Helix position
+        const helixT = t * 0.8 + (i / PARTICLE_COUNT) * Math.PI * 6;
+        const radius = 0.6 + Math.sin(i * 0.1) * 0.2;
+        const isDram = pd.stream === 'dram';
+        const phase = isDram ? 0 : Math.PI;
+
+        const hx = Math.cos(helixT + phase) * radius;
+        const hy = (i / PARTICLE_COUNT) * 6 - 3;
+        const hz = centerZ + Math.sin(helixT + phase) * radius;
+
+        posArr[i3]     = cx * (1 - s) + hx * s;
+        posArr[i3 + 1] = cy * (1 - s) + hy * s;
+        posArr[i3 + 2] = cz * (1 - s) + hz * s;
+
+        // Color transition
+        if (isDram) {
+          colArr[i3]     = 1.0 * (1 - s) + 0.0 * s;
+          colArr[i3 + 1] = 0.45 * (1 - s) + 0.9 * s;
+          colArr[i3 + 2] = 0.1 * (1 - s) + 1.0 * s;
+        } else {
+          colArr[i3]     = 1.0 * (1 - s) + 0.88 * s;
+          colArr[i3 + 1] = 0.45 * (1 - s) + 0.25 * s;
+          colArr[i3 + 2] = 0.1 * (1 - s) + 0.98 * s;
+        }
+      }
+    }
+
+    particleGeom.attributes.position.needsUpdate = true;
+    particleGeom.attributes.color.needsUpdate = true;
+
+    // ── Animate lights ──
+    pointLight1.position.x = 5 + Math.sin(t * 0.3) * 3;
+    pointLight2.position.z = -5 + Math.cos(t * 0.2) * 4;
+
+    // ── Render ──
+    renderer.render(scene, camera);
+  }
+
+
+  /* ───────────────────────────────────────────────────────────────
+     §10. INTRO ANIMATION & LOADING
+     ─────────────────────────────────────────────────────────────── */
+  function startExperience() {
+    // Hide loading screen
+    const loadingScreen = document.getElementById('loading-screen');
+    loadingScreen.classList.add('hidden');
+    setTimeout(() => loadingScreen.style.display = 'none', 1500);
+
+    // Animate UI panels in
+    const panels = [
+      '#identity-badge',
+      '#lab-target',
+      '#academic-pitch',
+      '#sim-control',
+      '#nav-hint'
+    ];
+
+    panels.forEach((sel, i) => {
+      const el = document.querySelector(sel);
+      gsap.fromTo(el,
+        { opacity: 0, y: 20 },
+        { opacity: 1, y: 0, duration: 0.8, delay: 0.8 + i * 0.15, ease: 'power2.out' }
+      );
+    });
+
+    // Camera intro sweep
+    gsap.fromTo(camera.position,
+      { z: 16, y: 4 },
+      { z: 8, y: 1, duration: 3, ease: 'power3.inOut' }
+    );
+  }
+
+  // Start after a brief load
+  window.addEventListener('load', () => {
+    setTimeout(startExperience, 1200);
+  });
+
+  // Start animation loop
+  animate();
+
+})();
+</script>
+</body>
+</html>
